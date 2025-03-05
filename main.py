@@ -11,8 +11,4 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def read_root(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
-@app.get("/enter", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("enter.html", {"request": request})
-
 
