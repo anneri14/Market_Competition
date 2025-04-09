@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -15,7 +15,16 @@ async def read_root(request: Request):
 async def enter_root(request: Request):
     return templates.TemplateResponse("enter.html", {"request": request})
 
+@app.post("/submit_name")
+async def submit_name(name: str = Form(...)):
+    if not name.strip():
+        return RedirectResponse("/", status_code=303)
+    return RedirectResponse(f"/to_main?name={name}", status_code=303)
+
 @app.get("/to_main", response_class=HTMLResponse)
-async def main_root(request: Request):
-    return templates.TemplateResponse("main_page.html", {"request": request})
+async def welcome(request: Request, name: str):
+    return templates.TemplateResponse("main_page.html", {
+        "request": request,
+        "name": name
+    })
 

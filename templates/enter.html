@@ -10,12 +10,17 @@
 <div class="background-main">
     <h class="enter-title">Вход</h>
 
-    <p class="enter-input-name-title">Имя</p>
-    <input class="enter-input-name" placeholder="Введите Ваше имя">
+    <form action="/submit_name" method="post">
+        <p class="enter-input-name-title">Имя</p>
 
-    <div class="btn">
-        <btn class="btn-start"><a href="/to_main">Начать</a></btn>
-    </div>
+        <input class="enter-input-name" name="name" placeholder="Введите Ваше имя" required>
+
+        <div class="btn">
+            <button class="btn-start" type="submit">Начать</button>
+        </div>
+
+    </form>
+    
 </div>
 
 </body>
