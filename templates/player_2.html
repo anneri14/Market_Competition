@@ -3,25 +3,35 @@
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="../static/css/style_player.css">
+<link rel="stylesheet" href="../static/css/style_player.css?3">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
-<div class="background-main">
-    <h class="enter-title">Игрок 2</h>
+    <div class="header">
+        <p class="header_name"> {{ name }} </p>
+    </div>
 
-    <form action="/submit_name" method="post">
-        <p class="enter-input-name-title">Цена</p>
+    <div class="background-main">
+        <h class="enter-title">Игрок 2</h>
+        <form action="/submit_name" method="post">
+            <p class="enter-input-name-title">Цена</p>
+            <input class="enter-input-name" name="name" placeholder="Цена" required>
+            <div class="btn">
+                <button class="btn-start" type="submit">Подтвердить</button>
+            </div>
+        </form>
+    </div>
 
-        <input class="enter-input-name" name="name" placeholder="Цена" required>
+    <div id="timer" class="timer-game">20</div>
 
-        <div class="btn">
-            <button class="btn-start" type="submit">Подтвердить</button>
-        </div>
+    <script>
+        const timerElement = document.getElementById('timer');
+        const ws = new WebSocket(`ws://${window.location.host}/ws/2`);
 
-    </form>
-    
-</div>
+        ws.onmessage = function(event) {
+            timerElement.innerHTML = event.data;
+        };
+    </script>
 
 
 </body>
