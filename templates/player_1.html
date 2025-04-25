@@ -3,12 +3,12 @@
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="../static/css/style_player.css?4">
+<link rel="stylesheet" href="../static/css/style_player.css?6">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
     <div class="header">
-        <p class="header_name"> {{ name }} </p>
+        <p class="round-name" id="round-name">Раунд {{cur_round}}</p>
     </div>
 
     <div class="content-wrapper">
@@ -31,13 +31,17 @@
     
     <script>
         const timerElement = document.getElementById('timer');
+        const roundElement = document.querySelector('.round-name');
+
         if (window.ws) {
             window.ws.close();
         }
         const ws = new WebSocket(`ws://${window.location.host}/ws/1`);
 
         ws.onmessage = function(event) {
-            timerElement.innerHTML = event.data;
+            const [time, round] = event.data.split('|');
+            timerElement.innerHTML = time;
+            roundElement.textContent = `Раунд ${round}`;
         };
     </script>
 
