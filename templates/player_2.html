@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="../static/css/style_player.css?3">
+<link rel="stylesheet" href="../static/css/style_player.css?4">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
@@ -11,18 +11,23 @@
         <p class="header_name"> {{ name }} </p>
     </div>
 
-    <div class="background-main">
-        <h class="enter-title">Игрок 2</h>
-        <form action="/submit_name" method="post">
-            <p class="enter-input-name-title">Цена</p>
-            <input class="enter-input-name" name="name" placeholder="Цена" required>
-            <div class="btn">
-                <button class="btn-start" type="submit">Подтвердить</button>
-            </div>
-        </form>
+    <div class="content-wrapper">
+        <div class="background-main">
+            <h class="enter-title">Игрок 2</h>
+            <form action="/submit_name" method="post">
+                <p class="enter-input-name-title">Цена</p>
+                <input class="enter-input-name" name="name" placeholder="Цена" required>
+                <div class="btn">
+                    <button class="btn-start" type="submit">Подтвердить</button>
+                </div>
+            </form>
+        </div>
+    
+        <div class="time-block">
+            <div class="timer-game">Оставшееся время:</div>
+            <div id="timer" class="timer-game">20</div>
+        </div>
     </div>
-
-    <div id="timer" class="timer-game">20</div>
 
     <script>
         const timerElement = document.getElementById('timer');

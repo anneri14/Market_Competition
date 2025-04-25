@@ -83,3 +83,9 @@ a {
     font-size: 35px;
     
 }
+
+.content-wrapper {
+    display: flex;
+    gap: 30px;
+    padding: 20px;
+}
