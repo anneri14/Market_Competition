@@ -98,3 +98,10 @@ a {
     justify-content: center;
     align-items: center;
 }
+
+.square {
+    width: 100px;
+    height: 100px;
+    background-color: gray;
+    border: 2px solid black;
+  }

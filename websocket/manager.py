@@ -12,7 +12,9 @@ class ConnectionManager:
     async def connect(self, player_id: int, websocket: WebSocket):
         await websocket.accept()
         self.active_connections[player_id] = websocket
+
         print(f"Игрок {player_id} подключен")
+
         if not self.is_timer_running:
             self.is_timer_running = True
             self.timer = 20
@@ -21,7 +23,9 @@ class ConnectionManager:
     def disconnect(self, player_id: int):
         if player_id in self.active_connections:
             del self.active_connections[player_id]
+
             print(f"Игрок {player_id} отключен")
+
             if not self.active_connections:
                 self.is_timer_running = False
                 self.timer = 20
@@ -43,7 +47,5 @@ class ConnectionManager:
 
             for player_id in self.active_connections:
                 await self.send_to_player(f"{self.timer}|{self.cur_round}", player_id)
-
-        
 
 manager = ConnectionManager()
