@@ -11,3 +11,11 @@ async def read_root(request: Request):
 @router.get("/to_main", response_class=HTMLResponse)
 async def welcome(request: Request, name: str):
     return templates.TemplateResponse("main_page.html", {"request": request, "name": name})
+
+@router.get("/win_page", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("win_page.html", {"request": request})
+
+@router.get("/fail_page", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("fail_page.html", {"request": request})

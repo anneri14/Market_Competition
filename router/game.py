@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, RedirectResponse
 from websocket.manager import manager
 from main import templates
-
+import random
 router = APIRouter()
 
 @router.get("/game", response_class=HTMLResponse)
@@ -18,9 +18,23 @@ async def select_player(player: int = Form(...)):
 @router.get("/game/{player_id}", response_class=HTMLResponse)
 async def game_page(request: Request, player_id: int):
     if player_id == 1:
-        return templates.TemplateResponse("player_1.html", {"request": request})
+        return templates.TemplateResponse(
+            "player_1.html", 
+            {
+                "request": request,
+                "season": manager.get_season(),
+                "product": manager.get_product()
+            }
+        )
     else:
-        return templates.TemplateResponse("player_2.html", {"request": request})
+        return templates.TemplateResponse(
+            "player_2.html", 
+            {
+                "request": request,
+                "season": manager.get_season(),
+                "product": manager.get_product()
+            }
+        )
     
 @router.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: int):
@@ -35,3 +49,10 @@ async def websocket_endpoint(websocket: WebSocket, player_id: int):
             await manager.send_to_player(data, other_player)
     except WebSocketDisconnect:
         manager.disconnect(player_id)
+
+
+
+    
+    
+    
+    
