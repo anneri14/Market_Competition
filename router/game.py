@@ -1,8 +1,9 @@
+import random
 from fastapi import APIRouter, Request, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, RedirectResponse
 from websocket.manager import manager
 from main import templates
-import random
+
 router = APIRouter()
 
 @router.get("/game", response_class=HTMLResponse)
@@ -35,7 +36,40 @@ async def game_page(request: Request, player_id: int):
                 "product": manager.get_product()
             }
         )
-    
+
+@router.post("/submit_price_quality")
+async def submit_price_quality(request: Request, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...)):
+    round_num = manager.cur_round
+
+    if round_num not in manager.player_data:
+        manager.player_data[round_num] = {}
+        
+    manager.player_data[round_num][player_id] = {
+        "price": price,
+        "quality": quality
+    }
+
+    best_player = None
+
+    if len(manager.player_data[round_num]) == 2:
+        p1 = manager.player_data[round_num][1]
+        p2 = manager.player_data[round_num][2]
+
+        if p1["price"] < p2["price"]:
+            best_player = 1
+        elif p1["price"] > p2["price"]:
+            best_player = 2
+        else:
+            best_player = random.choice([1, 2])
+
+        if best_player is not None:
+            for pid in [1, 2]:
+                if pid in manager.active_connections:
+                    await manager.send_to_player(f"Лучший игрок: Игрок {best_player}", pid)
+
+    return {"success": True}
+
+
 @router.websocket("/ws/{player_id}")
 async def websocket_endpoint(websocket: WebSocket, player_id: int):
     await manager.connect(player_id, websocket)
@@ -50,9 +84,3 @@ async def websocket_endpoint(websocket: WebSocket, player_id: int):
     except WebSocketDisconnect:
         manager.disconnect(player_id)
 
-
-
-    
-    
-    
-    

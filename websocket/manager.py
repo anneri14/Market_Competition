@@ -16,6 +16,7 @@ class ConnectionManager:
         self.is_timer_running = False
         self.cur_round = 1
         self.max_rounds = MAX_ROUNDS
+        self.player_data = {}
 
     async def connect(self, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""

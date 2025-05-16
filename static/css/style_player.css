@@ -118,6 +118,14 @@ a {
     flex-wrap: wrap;
 }
 
+.sqr.winner {
+    background-color: #28d45c;
+}
+
+.sqr.loser {
+    background-color: #ed4264;
+}
+
 .season-name {
     text-align: left;
     margin-left: 30px;
@@ -137,4 +145,19 @@ a {
     margin-left: 30px;
     margin-bottom: 3px;
     font-size: 25px;
+}
+
+.quality-block {
+    display: flex;
+    flex-direction: column; 
+    font-size: 20px;
+}
+
+.round-result {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
 }
