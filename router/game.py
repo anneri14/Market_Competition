@@ -10,13 +10,26 @@ router = APIRouter()
 async def enter_root(request: Request):
     return templates.TemplateResponse("game.html", {"request": request})
 
-@router.post("/choose_player")
-async def select_player(player: int = Form(...)):
-    if player not in [1, 2]:
-        return RedirectResponse("/", status_code=303)
-    return RedirectResponse(f"/game/{player}", status_code=303)
+@router.post("/create_game")
+async def create_game(request: Request):
+    game_id = manager.create_game_id()
+    return templates.TemplateResponse("main_page.html", {"request": request, "game_id": game_id})
 
-@router.get("/game/{player_id}", response_class=HTMLResponse)
+@router.post("/join_game")
+async def join_game(request: Request, game_id: str = Form(...)):
+    player_id = manager.join_game(game_id)
+    if player_id == 0:
+        return RedirectResponse("/join_game?error=invalid", status_code=303)
+    if player_id == 1:
+        if player_id in manager.games[game_id]:
+            player_id = 2
+            manager.games[game_id].append(2)
+        else:
+            manager.games[game_id].append(1)
+    return RedirectResponse(f"/game/{game_id}/{player_id}", status_code=303)
+
+
+@router.get("/game/{game_id}/{player_id}", response_class=HTMLResponse)
 async def game_page(request: Request, player_id: int):
     if player_id == 1:
         return templates.TemplateResponse(
@@ -62,10 +75,7 @@ async def submit_price_quality(request: Request, player_id: int = Form(...), pri
         else:
             best_player = random.choice([1, 2])
 
-        if best_player is not None:
-            for pid in [1, 2]:
-                if pid in manager.active_connections:
-                    await manager.send_to_player(f"Лучший игрок: Игрок {best_player}", pid)
+        await manager.send_round_result(best_player)
 
     return {"success": True}
 

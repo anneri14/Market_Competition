@@ -42,6 +42,7 @@ body {
 .right-half {
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     background-color: #A8D0E6;
@@ -57,9 +58,26 @@ body {
     color: #ffffff;
     border: none;
     font-family: "Philosopher", sans-serif;
+    margin: 10px;
 }
 
 a {
     text-decoration: none;
     color: #ffffff;
+}
+
+.game-id {
+    font-size: 25px;
+    color: #24305E;
+}
+
+.enter-input-name {
+    width: 30%;
+    border-radius: 5px;
+    border: 1px #24305E solid;
+    height: 25px;
+    font-family: "Philosopher", sans-serif;
+    padding-left: 10px;
+    font-size: 15px;
+    color: #24305E;
 }

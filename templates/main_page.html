@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <title>Main Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="../static/css/style_main.css">
+<link rel="stylesheet" href="../static/css/style_main.css?4">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
     <div class="header">
@@ -21,8 +21,19 @@
             </div>
             <div class="right-half">
                 <div class="btn">
-                    <button class="btn-start"><a href="/game">Играть</a></button>
+                    <form action="/create_game" method="post">
+                        <button class="btn-start" type="submit">Создать игру</button>
+                    </form>
                 </div>
+                <h class="game-id">ID игры: {{ game_id }}</h>
+                <div class="btn">
+                    <form action="/join_game" method="post">
+                        <button class="btn-start" type="submit">Присоединиться к игре</button>
+                        <input class="enter-input-name" name="game_id" placeholder="Введите ID игры" required>
+                    </form>
+                </div>
+                
+
             </div>
     </div>
 </body>

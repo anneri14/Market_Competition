@@ -11,21 +11,26 @@ MAX_ROUNDS = 24
 
 class ConnectionManager:
     def __init__(self):
+        """Инициализация менеджера"""
         self.active_connections: dict[int, WebSocket] = {}
         self.timer = ROUND_TIME
         self.is_timer_running = False
         self.cur_round = 1
         self.max_rounds = MAX_ROUNDS
         self.player_data = {}
+        self.games = {}
 
     async def connect(self, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
+        if player_id in self.active_connections:
+            return
+
         await websocket.accept()
         self.active_connections[player_id] = websocket
 
         print(f"Игрок {player_id} подключен")
 
-        if not self.is_timer_running:
+        if not self.is_timer_running and len(self.active_connections) == 2:
             self.is_timer_running = True
             self.timer = 20
             asyncio.create_task(self.start_timer())
@@ -42,9 +47,15 @@ class ConnectionManager:
                 self.timer = 20
 
     async def send_to_player(self, message: str, player_id: int) -> None:
+        """Отправка сообщения игроку"""
         if player_id in self.active_connections:
             await self.active_connections[player_id].send_text(message)
 
+    async def send_round_result(self, best_player: int) -> None:
+        """Отправка результата раунда обоим игрокам"""
+        message = f"Лучший игрок: Игрок {best_player}"
+        for player_id in [1, 2]:
+            await self.send_to_player(message, player_id)
 
     async def end_game(self) -> None:
         """Завершение игры и отключение всех игроков"""
@@ -89,5 +100,20 @@ class ConnectionManager:
     def get_product(self) -> str:
         """Рандомным образом определяем товар"""
         return random.choice(PRODUCTS)
+    
+    def create_game_id(self) -> str:
+        """Создаем уникальный ID игры"""
+        while True:
+            game_id = str(random.randint(100000, 999999))
+            if game_id not in self.games:
+                self.games[game_id] = []
+                return game_id
+    
+    def join_game(self, game_id: str) -> int:
+        """Возвращает номер игрока (1 или 2) или 0 если нельзя присоединиться"""
+        if game_id not in self.games:
+            return 0
+        
+        return 1
     
 manager = ConnectionManager()
