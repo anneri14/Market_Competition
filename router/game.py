@@ -20,24 +20,19 @@ async def join_game(request: Request, game_id: str = Form(...)):
     player_id = manager.join_game(game_id)
     if player_id == 0:
         return RedirectResponse("/join_game?error=invalid", status_code=303)
-    if player_id == 1:
-        if player_id in manager.games[game_id]:
-            player_id = 2
-            manager.games[game_id].append(2)
-        else:
-            manager.games[game_id].append(1)
     return RedirectResponse(f"/game/{game_id}/{player_id}", status_code=303)
 
 
 @router.get("/game/{game_id}/{player_id}", response_class=HTMLResponse)
-async def game_page(request: Request, player_id: int):
+async def game_page(request: Request, game_id: str, player_id: int):
     if player_id == 1:
         return templates.TemplateResponse(
             "player_1.html", 
             {
                 "request": request,
-                "season": manager.get_season(),
-                "product": manager.get_product()
+                "season": manager.get_season(game_id),
+                "product": manager.get_product(),
+                "game_id": game_id
             }
         )
     else:
@@ -45,8 +40,9 @@ async def game_page(request: Request, player_id: int):
             "player_2.html", 
             {
                 "request": request,
-                "season": manager.get_season(),
-                "product": manager.get_product()
+                "season": manager.get_season(game_id),
+                "product": manager.get_product(),
+                "game_id": game_id
             }
         )
 
@@ -80,9 +76,9 @@ async def submit_price_quality(request: Request, player_id: int = Form(...), pri
     return {"success": True}
 
 
-@router.websocket("/ws/{player_id}")
-async def websocket_endpoint(websocket: WebSocket, player_id: int):
-    await manager.connect(player_id, websocket)
+@router.websocket("/ws/{game_id}/{player_id}")
+async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: int):
+    await manager.connect(game_id, player_id, websocket)
     try:
         while True:
             data = await websocket.receive_text()
@@ -90,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket, player_id: int):
                 other_player = 2
             else:
                 other_player = 1
-            await manager.send_to_player(data, other_player)
+            await manager.send_to_player(data, game_id, other_player)
     except WebSocketDisconnect:
-        manager.disconnect(player_id)
+        manager.disconnect(game_id, player_id)
 

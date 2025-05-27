@@ -121,13 +121,14 @@
         const roundResultElement = document.getElementById('round-result');
         const form = document.getElementById('form_price_quality');
         const player_id = 2;
+        const game_id = "{{ game_id }}";
 
         function initWebSocket() {
             if (window.ws && window.ws.readyState === WebSocket.OPEN) {
                 return;
             }
 
-            window.ws = new WebSocket(`ws://${window.location.host}/ws/${player_id}`);
+            window.ws = new WebSocket(`ws://${window.location.host}/ws/${game_id}/${player_id}`);
 
             window.ws.onopen = function() {
                 console.log('WebSocket connection established');

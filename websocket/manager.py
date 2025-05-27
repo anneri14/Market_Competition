@@ -1,6 +1,7 @@
 from fastapi import WebSocket
 import asyncio
 import random
+import string
 
 SEASONS = ["Зима", "Весна", "Лето", "Осень"]
 PRODUCTS = ["Сноуборд", "Велосипед", "Солнечные очки", "Зонт и дождевик", "Новогодние украшения", "Школьные принадлежности", "Пуховик", "Гамаки и шезлонги", "Термос", "Семена и рассада"]
@@ -13,86 +14,95 @@ class ConnectionManager:
     def __init__(self):
         """Инициализация менеджера"""
         self.active_connections: dict[int, WebSocket] = {}
-        self.timer = ROUND_TIME
-        self.is_timer_running = False
-        self.cur_round = 1
-        self.max_rounds = MAX_ROUNDS
         self.player_data = {}
         self.games = {}
+        self.max_rounds = MAX_ROUNDS
 
-    async def connect(self, player_id: int, websocket: WebSocket) -> None:
+    async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
-        if player_id in self.active_connections:
+        if game_id not in self.games:
+            self.games[game_id] = {
+                'players': {}, 
+                'active_connections': {},
+                'cur_round': 1,
+                'is_timer_running': False
+            }
+
+        if player_id in self.games[game_id]['active_connections']:
             return
 
         await websocket.accept()
-        self.active_connections[player_id] = websocket
+        self.games[game_id]['active_connections'][player_id] = websocket
 
-        print(f"Игрок {player_id} подключен")
 
-        if not self.is_timer_running and len(self.active_connections) == 2:
-            self.is_timer_running = True
-            self.timer = 20
-            asyncio.create_task(self.start_timer())
+        print(f"Игрок {player_id} подключен к игре {game_id}")
 
-    def disconnect(self, player_id: int) -> None:
+        if len(self.games[game_id]['active_connections']) == 2:
+            self.games[game_id]['is_timer_running'] = True
+            asyncio.create_task(self.start_game_timer(game_id))
+
+    def disconnect(self, game_id: str, player_id: int) -> None:
         """Удаление подключения игрока"""
-        if player_id in self.active_connections:
-            del self.active_connections[player_id]
+        if game_id in self.games and player_id in self.games[game_id]['active_connections']:
+            del self.games[game_id]['active_connections'][player_id]
+            print(f"Игрок {player_id} отключен от игры {game_id}")
 
-            print(f"Игрок {player_id} отключен")
+            if not self.games[game_id]['active_connections']:
+                self.games[game_id]['is_timer_running'] = False
+                del self.games[game_id]
+                print(f"Игры {game_id} завершена и удалена")
 
-            if not self.active_connections:
-                self.is_timer_running = False
-                self.timer = 20
-
-    async def send_to_player(self, message: str, player_id: int) -> None:
+    async def send_to_player(self, message: str, game_id: str, player_id: int) -> None:
         """Отправка сообщения игроку"""
-        if player_id in self.active_connections:
-            await self.active_connections[player_id].send_text(message)
+        if game_id in self.games and player_id in self.games[game_id]['active_connections']:
+            await self.games[game_id]['active_connections'][player_id].send_text(message)
 
-    async def send_round_result(self, best_player: int) -> None:
+    async def send_round_result(self, game_id: str, best_player: int) -> None:
         """Отправка результата раунда обоим игрокам"""
         message = f"Лучший игрок: Игрок {best_player}"
-        for player_id in [1, 2]:
-            await self.send_to_player(message, player_id)
+        for player_id in self.games[game_id]['active_connections']:
+            await self.send_to_player(message, game_id, player_id)
 
-    async def end_game(self) -> None:
+    async def end_game(self, game_id: str) -> None:
         """Завершение игры и отключение всех игроков"""
-        for player_id in self.active_connections:
-            await self.send_to_player("Игра окончена!", player_id)
-            self.disconnect(player_id)
+        for player_id in self.games[game_id]['active_connections']:
+            await self.send_to_player("Игра окончена!", game_id, player_id)
+            self.disconnect(game_id, player_id)
 
 
-    async def start_timer(self) -> None:
-        """Запуск таймера"""
-        while self.is_timer_running and self.cur_round <= self.max_rounds:
-            self.timer = 20
+    async def start_game_timer(self, game_id: str) -> None:
+        """Запуск таймера для игры"""
+        self.games[game_id]['cur_round'] = 1
+        self.games[game_id]['timer'] = ROUND_TIME
 
-            cur_season = self.get_season()
+        while self.games[game_id]['is_timer_running'] and self.games[game_id]['cur_round'] <= self.max_rounds:
+            cur_season = self.get_season(game_id)
             cur_product = self.get_product()
 
-            while self.timer > 0 and self.is_timer_running:
-                for player_id in self.active_connections:
-                    await self.send_to_player(f"{self.timer}|{self.cur_round}|{cur_season}|{cur_product}", player_id)
+            while self.games[game_id]['timer'] > 0 and self.games[game_id]['is_timer_running']:
+                for player_id in self.games[game_id]['active_connections']:
+                    await self.send_to_player(f"{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
                 await asyncio.sleep(1)
-                self.timer -= 1
+                self.games[game_id]['timer'] -= 1
             
-            if not self.is_timer_running:
+            if not self.games[game_id]['is_timer_running']:
                 break
 
-            self.cur_round += 1
+            self.games[game_id]['cur_round'] += 1
+            self.games[game_id]['timer'] = ROUND_TIME
 
-        if self.cur_round > self.max_rounds:
-            await self.end_game()
+        if self.games[game_id]['cur_round'] > self.max_rounds:
+            await self.end_game(game_id)
 
-    def get_season(self) -> str:
+    def get_season(self, game_id: str) -> str:
         """Определяем сезон на основе номера раунда"""
-        if 1 <= self.cur_round <= 6:
+        cur_round = self.games[game_id].get('cur_round', 1)
+
+        if 1 <= cur_round <= 6:
             return SEASONS[0]
-        elif 7 <= self.cur_round <= 12:
+        elif 7 <= cur_round <= 12:
             return SEASONS[1]
-        elif 13 <= self.cur_round <= 18:
+        elif 13 <= cur_round <= 18:
             return SEASONS[2]
         else:
             return SEASONS[3]
@@ -103,17 +113,27 @@ class ConnectionManager:
     
     def create_game_id(self) -> str:
         """Создаем уникальный ID игры"""
+        symb = string.digits + string.ascii_letters
         while True:
-            game_id = str(random.randint(100000, 999999))
+            game_id = ''.join(random.choice(symb) for _ in range(10))
             if game_id not in self.games:
-                self.games[game_id] = []
+                self.games[game_id] = {
+                    'active_connections': {},
+                    'cur_round': 1,
+                    'is_timer_running': False,
+                    'player_data': {},
+                    'timer': ROUND_TIME
+                }
                 return game_id
     
     def join_game(self, game_id: str) -> int:
-        """Возвращает номер игрока (1 или 2) или 0 если нельзя присоединиться"""
+        """Возвращает номер игрока или 0 если нельзя присоединиться"""
         if game_id not in self.games:
             return 0
         
-        return 1
+        if len(self.games[game_id]['active_connections']) < 2:
+            player_id = len(self.games[game_id]['active_connections']) + 1
+            return player_id
+        return 0
     
 manager = ConnectionManager()
