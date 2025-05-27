@@ -1,6 +1,6 @@
 ## Многопользовательская экономическая игра “Market Competition”
 
-[Cсылка на игру](www.market-competition.ru)
+[Cсылка на игру](http://market-competition.ru)
 
 ## Содержание
 
