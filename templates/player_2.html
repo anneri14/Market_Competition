@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="/static/css/style_player.css?12">
+<link rel="stylesheet" href="/static/css/style_player.css?14">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
@@ -20,8 +20,8 @@
                 <p class="trust-level-name">Уровень доверия: {{ trust_level }}</p>
             </div>
             
-            <form id="form_price_quality" action="/submit_price_quality" method="post">
-                
+            <form id="form_price_quality" action="/submit_price_quality/{{ game_id }}" method="post">
+                <input type="hidden" name="game_id" value="{{ game_id }}">
                 <input type="hidden" name="player_id" value="2">
                 <p class="enter-input-name-title">Цена</p>
                 <div class="product-block">
@@ -110,6 +110,15 @@
 
             <div id="round-result" class="round-result"></div>
         </div>
+
+        <div class="content-wrapper-3">
+            <div class="timer-game">История шагов:</div>
+            <ul id="history-list">
+                {% for choice in player_choices %}
+                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     
     </div>
     
@@ -170,12 +179,16 @@
                 
                 const formData = new FormData(form);
                 try {
-                    const response = await fetch('/submit_price_quality', {
+                    const response = await fetch('/submit_price_quality/{{ game_id }}', {
                         method: 'POST',
                         body: formData
                     });
                     
                     if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.choice) {
+                            addHistoryRow(data.choice.round, data.choice.price, data.choice.quality);
+                        }
                         console.log('Данные успешно отправлены');
                         const radioButtons = form.querySelectorAll('input[type="radio"]');
                         radioButtons.forEach(radio => radio.checked = false);
@@ -185,6 +198,16 @@
                 }
             });
         });
+
+        const priceLabels = ["Очень низкая", "Низкая", "Средняя", "Выше среднего", "Дорогая", "Очень дорогая"];
+        const qualityLabels = {high: "Высокое", medium: "Среднее", low: "Низкое"};
+
+        function addHistoryRow(round, price, quality) {
+            const historyList = document.getElementById('history-list');
+            const li = document.createElement('li');
+            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}`;
+            historyList.appendChild(li);
+        }
 
         function changeColor(round, isWinning) {
             const squares = document.querySelectorAll('.sqr');

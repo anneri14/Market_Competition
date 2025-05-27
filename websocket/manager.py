@@ -14,7 +14,6 @@ class ConnectionManager:
     def __init__(self):
         """Инициализация менеджера"""
         self.active_connections: dict[int, WebSocket] = {}
-        self.player_data = {}
         self.games = {}
         self.max_rounds = MAX_ROUNDS
 
@@ -135,5 +134,26 @@ class ConnectionManager:
             player_id = len(self.games[game_id]['active_connections']) + 1
             return player_id
         return 0
+    
+    def get_cur_round(self, game_id: str):
+        if game_id in self.games:
+            return self.games[game_id]['cur_round']
+        else:
+            return 0
+        
+    def get_player_choices(self, game_id: str, player_id: int):
+        """Возвращает список выборов игрока"""
+        if game_id not in self.games or 'player_data' not in self.games[game_id]:
+            return []
+        
+        choices = []
+        for round_num, players_data in self.games[game_id]['player_data'].items():
+            if player_id in players_data:
+                choices.append({
+                    "round": round_num,
+                    "price": players_data[player_id]["price"],
+                    "quality": players_data[player_id]["quality"]
+                })
+        return choices
     
 manager = ConnectionManager()

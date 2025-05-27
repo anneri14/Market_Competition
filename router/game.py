@@ -25,6 +25,7 @@ async def join_game(request: Request, game_id: str = Form(...)):
 
 @router.get("/game/{game_id}/{player_id}", response_class=HTMLResponse)
 async def game_page(request: Request, game_id: str, player_id: int):
+    player_choices = manager.get_player_choices(game_id, player_id)
     if player_id == 1:
         return templates.TemplateResponse(
             "player_1.html", 
@@ -32,7 +33,9 @@ async def game_page(request: Request, game_id: str, player_id: int):
                 "request": request,
                 "season": manager.get_season(game_id),
                 "product": manager.get_product(),
-                "game_id": game_id
+                "game_id": game_id,
+                "player_choices": player_choices,
+                "cur_round": manager.get_cur_round(game_id)
             }
         )
     else:
@@ -42,27 +45,33 @@ async def game_page(request: Request, game_id: str, player_id: int):
                 "request": request,
                 "season": manager.get_season(game_id),
                 "product": manager.get_product(),
-                "game_id": game_id
+                "game_id": game_id,
+                "player_choices": player_choices,
+                "cur_round": manager.get_cur_round(game_id)
             }
         )
 
-@router.post("/submit_price_quality")
-async def submit_price_quality(request: Request, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...)):
-    round_num = manager.cur_round
+@router.post("/submit_price_quality/{game_id}")
+async def submit_price_quality(request: Request, game_id: str, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...)):
+    print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}")
 
-    if round_num not in manager.player_data:
-        manager.player_data[round_num] = {}
+    round_num = manager.get_cur_round(game_id)
+
+    if 'player_data' not in manager.games[game_id]:
+        manager.games[game_id]['player_data'] = {}
+    if round_num not in manager.games[game_id]['player_data']:
+        manager.games[game_id]['player_data'][round_num] = {}
         
-    manager.player_data[round_num][player_id] = {
+    manager.games[game_id]['player_data'][round_num][player_id] = {
         "price": price,
         "quality": quality
     }
 
     best_player = None
 
-    if len(manager.player_data[round_num]) == 2:
-        p1 = manager.player_data[round_num][1]
-        p2 = manager.player_data[round_num][2]
+    if len(manager.games[game_id]['player_data'][round_num]) == 2:
+        p1 = manager.games[game_id]['player_data'][round_num][1]
+        p2 = manager.games[game_id]['player_data'][round_num][2]
 
         if p1["price"] < p2["price"]:
             best_player = 1
@@ -71,9 +80,16 @@ async def submit_price_quality(request: Request, player_id: int = Form(...), pri
         else:
             best_player = random.choice([1, 2])
 
-        await manager.send_round_result(best_player)
-
-    return {"success": True}
+        await manager.send_round_result(game_id, best_player)
+   
+    return {
+        "success": True,
+        "choice": {
+            "round": round_num,
+            "price": price,
+            "quality": quality
+        }
+    }
 
 
 @router.websocket("/ws/{game_id}/{player_id}")
