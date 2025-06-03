@@ -2,7 +2,7 @@ import random
 from fastapi import APIRouter, Request, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, RedirectResponse
 from websocket.manager import manager
-from main import templates
+from app import templates
 
 router = APIRouter()
 

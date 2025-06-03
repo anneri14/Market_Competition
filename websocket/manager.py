@@ -71,10 +71,14 @@ class ConnectionManager:
 
     async def start_game_timer(self, game_id: str) -> None:
         """Запуск таймера для игры"""
+        
         self.games[game_id]['cur_round'] = 1
         self.games[game_id]['timer'] = ROUND_TIME
 
         while self.games[game_id]['is_timer_running'] and self.games[game_id]['cur_round'] <= self.max_rounds:
+            if game_id not in self.games:
+                break
+        
             cur_season = self.get_season(game_id)
             cur_product = self.get_product()
 
@@ -84,7 +88,7 @@ class ConnectionManager:
                 await asyncio.sleep(1)
                 self.games[game_id]['timer'] -= 1
             
-            if not self.games[game_id]['is_timer_running']:
+            if game_id not in self.games or not self.games[game_id]['is_timer_running']:
                 break
 
             self.games[game_id]['cur_round'] += 1
