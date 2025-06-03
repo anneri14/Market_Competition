@@ -106,3 +106,15 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: int)
     except WebSocketDisconnect:
         manager.disconnect(game_id, player_id)
 
+@router.websocket("/ws/test")
+async def websocket_test_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"Echo: {data}")
+            
+            
+    except WebSocketDisconnect:
+        print("Test WebSocket client disconnected")
+
