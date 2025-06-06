@@ -16,6 +16,7 @@ class ConnectionManager:
         self.active_connections: dict[int, WebSocket] = {}
         self.games = {}
         self.max_rounds = MAX_ROUNDS
+        self.player_choices_made = {}
 
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
@@ -68,12 +69,21 @@ class ConnectionManager:
             await self.send_to_player("Игра окончена!", game_id, player_id)
             self.disconnect(game_id, player_id)
 
+    async def end_round(self, game_id: str) -> None:
+        """Завершение раунда и сброс состояния выбора игроков"""
+        for player_id in self.games[game_id]['active_connections']:
+            await self.send_to_player("Раунд завершён! Ожидайте следующего раунда.", game_id, player_id)
+    
+        self.player_choices_made[game_id] = {1: False, 2: False}
+
 
     async def start_game_timer(self, game_id: str) -> None:
         """Запуск таймера для игры"""
         
         self.games[game_id]['cur_round'] = 1
         self.games[game_id]['timer'] = ROUND_TIME
+        self.player_choices_made[game_id] = {1: False, 2: False}
+
 
         while self.games[game_id]['is_timer_running'] and self.games[game_id]['cur_round'] <= self.max_rounds:
             if game_id not in self.games:
@@ -93,6 +103,9 @@ class ConnectionManager:
 
             self.games[game_id]['cur_round'] += 1
             self.games[game_id]['timer'] = ROUND_TIME
+            self.player_choices_made[game_id] = {1: False, 2: False}
+
+        await self.end_round(game_id)
 
         if self.games[game_id]['cur_round'] > self.max_rounds:
             await self.end_game(game_id)

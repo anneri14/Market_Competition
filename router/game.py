@@ -53,8 +53,16 @@ async def game_page(request: Request, game_id: str, player_id: int):
 
 @router.post("/submit_price_quality/{game_id}")
 async def submit_price_quality(request: Request, game_id: str, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...)):
-    print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}")
 
+    if manager.player_choices_made.get(game_id, {}).get(player_id, False):
+        return {
+            "success": False,
+            "message": "Вы уже сделали выбор в этом раунде."
+        }
+    
+    else:
+        print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}")
+        
     round_num = manager.get_cur_round(game_id)
 
     if 'player_data' not in manager.games[game_id]:
@@ -67,6 +75,8 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         "quality": quality
     }
 
+    manager.player_choices_made[game_id][player_id] = True
+    
     best_player = None
 
     if len(manager.games[game_id]['player_data'][round_num]) == 2:
@@ -117,4 +127,3 @@ async def websocket_test_endpoint(websocket: WebSocket):
             
     except WebSocketDisconnect:
         print("Test WebSocket client disconnected")
-
