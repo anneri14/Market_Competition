@@ -19,8 +19,7 @@ class ConnectionManager:
 
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
-        if not product_generator.products_inited:
-            await product_generator.init_products_list()
+        product_generator.init_products_list()
 
         if game_id not in self.games:
             self.games[game_id] = {
