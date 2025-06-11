@@ -2,13 +2,12 @@ from fastapi import WebSocket
 import asyncio
 import random
 import string
+from services.products_generator import product_generator
 
 SEASONS = ["Зима", "Весна", "Лето", "Осень"]
-PRODUCTS = ["Сноуборд", "Велосипед", "Солнечные очки", "Зонт и дождевик", "Новогодние украшения", "Школьные принадлежности", "Пуховик", "Гамаки и шезлонги", "Термос", "Семена и рассада"]
 
 ROUND_TIME = 20
 MAX_ROUNDS = 24
-
 
 class ConnectionManager:
     def __init__(self):
@@ -20,6 +19,9 @@ class ConnectionManager:
 
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
+        if not product_generator.products_inited:
+            await product_generator.init_products_list()
+
         if game_id not in self.games:
             self.games[game_id] = {
                 'players': {}, 
@@ -125,7 +127,7 @@ class ConnectionManager:
         
     def get_product(self) -> str:
         """Рандомным образом определяем товар"""
-        return random.choice(PRODUCTS)
+        return product_generator.get_random_product()
     
     def create_game_id(self) -> str:
         """Создаем уникальный ID игры"""
