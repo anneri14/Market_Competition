@@ -66,6 +66,8 @@ class ProductsGenerator:
         self.products_inited = True
 
     def get_random_product(self):
+        if not self.products_inited:
+            self.init_products_list()
         return random.choice(self.products)
 
 product_generator = ProductsGenerator()
