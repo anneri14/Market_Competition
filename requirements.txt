@@ -4,3 +4,4 @@ jinja2
 aiofiles
 yandex-cloud-ml-sdk
 python-dotenv
+python-multipart
