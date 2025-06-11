@@ -16,7 +16,7 @@ class ProductsGenerator:
         self.api_key = os.getenv('YANDEX_CLOUD_API_KEY')
         self.folder_id = os.getenv('YANDEX_CLOUD_FOLDER_ID')
 
-    async def init_products_list(self):
+    def init_products_list(self):
         """Инициализация списка товаров через Yandex Cloud ML"""
         if self.products_inited:
             return
