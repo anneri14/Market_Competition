@@ -11,7 +11,7 @@ async def get_random_product():
     try:
         return {
             "product": product_generator.get_random_product(),
-            "source": "API" if product_generator._initialized else "default"
+            "source": "API" if product_generator.products_inited else "default"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal Server Error")
@@ -21,13 +21,13 @@ async def get_all_products():
     """Возвращает весь список товаров"""
     try:
         # Принудительно инициализируем при первом запросе
-        if not product_generator._initialized:
-            product_generator._initialize_products()
+        if not product_generator.products_inited:
+            product_generator.init_products_list()
             
         return {
             "products": product_generator.products,
             "count": len(product_generator.products),
-            "source": "API" if product_generator._initialized else "default"
+            "source": "API" if product_generator.products_inited else "default"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
