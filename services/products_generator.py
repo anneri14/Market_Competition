@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import random
 import os
 
-load_dotenv()
+load_dotenv('/var/www/Market_Competition/.env')
 
 PRODUCTS_BASE = ["Сноуборд", "Велосипед", "Солнечные очки", "Зонт и дождевик", "Новогодние украшения", "Школьные принадлежности", "Пуховик", "Гамаки и шезлонги", "Термос", "Семена и рассада"]
 
