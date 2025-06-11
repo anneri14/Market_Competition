@@ -1,16 +1,17 @@
 import os
-import asyncio
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk.auth import APIKeyAuth
 from dotenv import load_dotenv
+import ast
 
 # Загрузка переменных окружения
 load_dotenv('/var/www/Market_Competition/.env')
 
-async def test_api():
+def test_api():
     print("Инициализация API...")
     
     try:
+        # Инициализация SDK
         sdk = YCloudML(
             folder_id=os.getenv('YANDEX_CLOUD_FOLDER_ID'),
             auth=APIKeyAuth(os.getenv('YANDEX_CLOUD_API_KEY'))
@@ -18,8 +19,8 @@ async def test_api():
 
         print("Отправка запроса к API...")
         
-        # Правильный формат запроса
-        result = await sdk.models.completions("yandexgpt").configure(
+        # Правильный синхронный запрос
+        result = sdk.models.completions("yandexgpt").configure(
             temperature=0.7
         ).run([
             {
@@ -28,28 +29,32 @@ async def test_api():
             },
             {
                 "role": "user", 
-                "text": "Сгенерируй список из 10 товаров для интернет-магазина, популярных зимой."
+                "text": "Сгенерируй список из 10 популярных товаров для интернет-магазина. Только список, без пояснений."
             }
         ])
 
-        print("\nОтвет API:")
-        for alternative in result.alternatives:
-            print(f"Статус: {alternative.status}")
-            print(f"Текст: {alternative.text}")
+        print("\nОтвет API получен. Статус:", result.alternatives[0].status)
+        
+        # Обработка ответа
+        if result.alternatives:
+            response_text = result.alternatives[0].text
+            print("Сырой ответ:", response_text)
             
             try:
-                # Безопасное преобразование ответа
-                products = eval(alternative.text)
+                # Безопасное преобразование
+                products = ast.literal_eval(response_text.strip())
                 if isinstance(products, list):
                     print("\nУспешно получен список товаров:")
-                    for product in products:
-                        print(f"- {product}")
+                    for i, product in enumerate(products, 1):
+                        print(f"{i}. {product}")
                 else:
-                    print("Ответ не является списком")
-            except:
-                print("Не удалось преобразовать ответ в список")
+                    print("Ошибка: ответ не является списком")
+            except (SyntaxError, ValueError) as e:
+                print(f"Ошибка парсинга: {e}\nПолный ответ:")
+                print(response_text)
 
     except Exception as e:
         print(f"\nОшибка API: {str(e)}")
 
-asyncio.run(test_api())
+if __name__ == "__main__":
+    test_api()
