@@ -28,8 +28,8 @@ messages = [
 def main():
     try:
         sdk = YCloudML(
-            folder_id=os.getenv('YANDEX_CLOUD_API_KEY'),
-            auth=APIKeyAuth(os.getenv('YANDEX_CLOUD_FOLDER_ID')),
+            folder_id=os.getenv('YANDEX_CLOUD_FOLDER_ID'),
+            auth=APIKeyAuth(os.getenv('YANDEX_CLOUD_API_KEY')),
         )
 
         result = (
