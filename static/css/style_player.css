@@ -16,8 +16,13 @@ body {
 .header {
     background-color: #374785;
     height: 80px;
-    position: relative;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
     margin: 0;
+    padding: 0;
+    z-index: 1000;
 }
 
 .header_name {
@@ -34,7 +39,7 @@ body {
     border-radius: 20px;
     border: 1px #24305E solid;
     padding: 20px;
-    width: 35%;
+    width: 30%;
     text-align: center;
     color: #24305E;
 }
@@ -46,7 +51,7 @@ body {
     height: 50px;
     font-family: "Philosopher", sans-serif;
     padding-left: 10px;
-    font-size: 20px;
+    font-size: 23px;
     color: #24305E;
 }
 
@@ -61,7 +66,7 @@ body {
     border-radius: 5px;
     padding: 10px 20px;
     text-align: center;
-    font-size: 25px;
+    font-size: 23px;
     color: #FFFFFF;
     font-family: "Philosopher", sans-serif;
 }
@@ -77,22 +82,23 @@ a {
 }
 
 .enter-title {
-    font-size: 25px;
+    font-size: 23px;
 }
 
 .timer-game {
-    font-size: 25px;
+    font-size: 23px;
 }
 
 .content-wrapper {
     display: flex;
     gap: 30px;
     padding: 20px;
+    margin-top: 80px;
 }
 
 .round-name {
     color: #FFFFFF;
-    font-size: 25px;
+    font-size: 23px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -130,21 +136,21 @@ a {
     text-align: left;
     margin-left: 30px;
     margin-bottom: 3px;
-    font-size: 25px;
+    font-size: 23px;
 }
 
 .product-name {
     text-align: left;
     margin-left: 30px;
     margin-bottom: 3px;
-    font-size: 25px;
+    font-size: 23px;
 }
 
 .trust-level-name {
     text-align: left;
     margin-left: 30px;
     margin-bottom: 3px;
-    font-size: 25px;
+    font-size: 23px;
 }
 
 
