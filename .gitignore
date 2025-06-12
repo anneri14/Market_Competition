@@ -8,3 +8,7 @@ __pycache__/
 .Python
 venv/
 env/
+.DS_Store
+venv/
+.venv/
+env/
