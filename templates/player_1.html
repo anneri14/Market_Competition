@@ -81,13 +81,16 @@
                 <div class="sqr">2</div>
                 <div class="sqr">3</div>
                 <div class="sqr">4</div>
-                <div class="sqr">5</div>
-                <div class="sqr">6</div>
             </div>
 
             <div class="all-sqr">
+                <div class="sqr">5</div>
+                <div class="sqr">6</div>
                 <div class="sqr">7</div>
                 <div class="sqr">8</div>
+            </div>
+
+            <div class="all-sqr">
                 <div class="sqr">9</div>
                 <div class="sqr">10</div>
                 <div class="sqr">11</div>
@@ -99,17 +102,6 @@
                 <div class="sqr">14</div>
                 <div class="sqr">15</div>
                 <div class="sqr">16</div>
-                <div class="sqr">17</div>
-                <div class="sqr">18</div>
-            </div>
-
-            <div class="all-sqr">
-                <div class="sqr">19</div>
-                <div class="sqr">20</div>
-                <div class="sqr">21</div>
-                <div class="sqr">22</div>
-                <div class="sqr">23</div>
-                <div class="sqr">24</div>
             </div>
 
             <div id="round-result" class="round-result"></div>
@@ -130,7 +122,6 @@
                 {% endfor %}
             </ul>
         </div>
-    
     </div>
     
     <script>
@@ -141,7 +132,6 @@
         const roundResultElement = document.getElementById('round-result');
         const form = document.getElementById('form_price_quality');
         const player_id = 1;
-        const game_id = "{{ game_id }}";
 
         function initWebSocket() {
             if (window.ws && window.ws.readyState === WebSocket.OPEN) {
@@ -240,7 +230,5 @@
             }
         }
     </script>
-
-
 </body>
 </html>

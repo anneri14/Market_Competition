@@ -7,7 +7,7 @@ from services.products_generator import product_generator
 SEASONS = ["Зима", "Весна", "Лето", "Осень"]
 
 ROUND_TIME = 30
-MAX_ROUNDS = 24
+MAX_ROUNDS = 16
 
 class ConnectionManager:
     def __init__(self):
