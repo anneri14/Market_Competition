@@ -77,11 +77,11 @@ a {
 }
 
 .enter-title {
-    font-size: 40px;
+    font-size: 25px;
 }
 
 .timer-game {
-    font-size: 35px;
+    font-size: 25px;
 }
 
 .content-wrapper {
@@ -92,15 +92,15 @@ a {
 
 .round-name {
     color: #FFFFFF;
-    font-size: 30px;
+    font-size: 25px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .sqr {
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     background-color: #E0E0E0;
     border: 1px solid #000000;
     display: flex;
@@ -147,11 +147,6 @@ a {
     font-size: 25px;
 }
 
-.quality-block {
-    display: flex;
-    flex-direction: column; 
-    font-size: 20px;
-}
 
 .round-result {
     margin-top: 20px;

@@ -17,18 +17,34 @@ class ConnectionManager:
         self.max_rounds = MAX_ROUNDS
         self.player_choices_made = {}
 
+        self.PRICE_INFO = {
+            'low': {'coef': 1.3, 'income': 0.7},
+            'medium': {'coef': 1, 'income': 1},
+            'high': {'coef': 0.7, 'income': 1.3}
+        }
+
+        self.QUALITY_INFO = {
+            'low': {'coef': 0.7, 'cost': 0},
+            'medium': {'coef': 1, 'cost': 50},
+            'high': {'coef': 1.3, 'cost': 100}
+        }
+
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
         if not product_generator.products_inited:
-            product_generator.init_products_list()
+            await product_generator.init_products_list()
 
         if game_id not in self.games:
             self.games[game_id] = {
-                'players': {}, 
+                'players': {
+                    1: {"budget": 1000, "score": 0, "brand": 0},
+                    2: {"budget": 1000, "score": 0, "brand": 0}
+                }, 
                 'active_connections': {},
                 'cur_round': 1,
                 'is_timer_running': False
             }
+            self.player_choices[game_id] = {1: None, 2: None}
 
         if player_id in self.games[game_id]['active_connections']:
             return
@@ -52,7 +68,7 @@ class ConnectionManager:
             if not self.games[game_id]['active_connections']:
                 self.games[game_id]['is_timer_running'] = False
                 del self.games[game_id]
-                print(f"Игры {game_id} завершена и удалена")
+                print(f"Игра {game_id} завершена и удалена")
 
     async def send_to_player(self, message: str, game_id: str, player_id: int) -> None:
         """Отправка сообщения игроку"""
@@ -73,10 +89,30 @@ class ConnectionManager:
 
     async def end_round(self, game_id: str) -> None:
         """Завершение раунда и сброс состояния выбора игроков"""
+        round_num = self.games[game_id]['cur_round']
+
         for player_id in self.games[game_id]['active_connections']:
             await self.send_to_player("Раунд завершён! Ожидайте следующего раунда.", game_id, player_id)
     
+        if round_num in self.games[game_id].get('player_data', {}):
+            for player_id in self.games[game_id]['active_connections']:
+                if player_id == 1:
+                    opponent_id = 2
+                else:
+                    opponent_id = 1
+
+                if opponent_id in self.games[game_id]['player_data'][round_num]:
+                    opponent_data = self.games[game_id]['player_data'][round_num][opponent_id]
+                    await self.send_to_player(f"opponent_actions|{round_num}|"f"{opponent_data['price']}|"f"{opponent_data['quality']}|"f"{opponent_data['advertisement']}", game_id, player_id)
+
+        self.games[game_id]['cur_round'] += 1
+        self.games[game_id]['timer'] = ROUND_TIME
         self.player_choices_made[game_id] = {1: False, 2: False}
+
+        cur_season = self.get_season(game_id)
+        cur_product = self.get_product()
+        for player_id in self.games[game_id]['active_connections']:
+            await self.send_to_player(f"{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
 
 
     async def start_game_timer(self, game_id: str) -> None:
@@ -95,6 +131,9 @@ class ConnectionManager:
             cur_product = self.get_product()
 
             while self.games[game_id]['timer'] > 0 and self.games[game_id]['is_timer_running']:
+                if len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
+                    break
+
                 for player_id in self.games[game_id]['active_connections']:
                     await self.send_to_player(f"{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
                 await asyncio.sleep(1)
@@ -103,11 +142,9 @@ class ConnectionManager:
             if game_id not in self.games or not self.games[game_id]['is_timer_running']:
                 break
 
-            self.games[game_id]['cur_round'] += 1
-            self.games[game_id]['timer'] = ROUND_TIME
-            self.player_choices_made[game_id] = {1: False, 2: False}
 
-        await self.end_round(game_id)
+        if self.games[game_id]['timer'] <= 0 or len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
+            await self.end_round(game_id)
 
         if self.games[game_id]['cur_round'] > self.max_rounds:
             await self.end_game(game_id)
@@ -171,8 +208,25 @@ class ConnectionManager:
                 choices.append({
                     "round": round_num,
                     "price": players_data[player_id]["price"],
-                    "quality": players_data[player_id]["quality"]
+                    "quality": players_data[player_id]["quality"],
+                    "advertisement": players_data[player_id]["advertisement"]
                 })
         return choices
+    
+    def get_opponent_choice(self, game_id: str, player_id: int, round_num: int):
+        """Возвращает выбор противника для конкретного раунда"""
+        if game_id not in self.games or 'player_data' not in self.games[game_id]:
+            return None
+        
+        opponent_id = 2 if player_id == 1 else 1
+        round_data = self.games[game_id]['player_data'].get(round_num, {})
+        
+        if opponent_id in round_data:
+            return {
+                "price": round_data[opponent_id]["price"],
+                "quality": round_data[opponent_id]["quality"],
+                "advertisement": round_data[opponent_id]["advertisement"]
+            }
+        return None
     
 manager = ConnectionManager()

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import random
 import os
 
-load_dotenv('/var/www/Market_Competition/.env')
+load_dotenv()
 
 PRODUCTS_BASE = ["Сноуборд", "Велосипед", "Солнечные очки", "Зонт и дождевик", "Новогодние украшения", "Школьные принадлежности", "Пуховик", "Гамаки и шезлонги", "Термос", "Семена и рассада"]
 
@@ -16,7 +16,7 @@ class ProductsGenerator:
         self.api_key = os.getenv('YANDEX_CLOUD_API_KEY')
         self.folder_id = os.getenv('YANDEX_CLOUD_FOLDER_ID')
 
-    def init_products_list(self):
+    async def init_products_list(self):
         """Инициализация списка товаров через Yandex Cloud ML"""
         if self.products_inited:
             return
@@ -66,8 +66,6 @@ class ProductsGenerator:
         self.products_inited = True
 
     def get_random_product(self):
-        if not self.products_inited:
-            self.init_products_list()
         return random.choice(self.products)
 
 product_generator = ProductsGenerator()

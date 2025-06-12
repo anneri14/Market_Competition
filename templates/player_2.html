@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="/static/css/style_player.css?14">
+<link rel="stylesheet" href="/static/css/style_player.css?15">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
@@ -17,7 +17,6 @@
             <div class="info-block">
                 <p class="season-name">Сезон: {{ season }}</p>
                 <p class="product-name">Товар: {{ product }}</p>
-                <p class="trust-level-name">Уровень доверия: {{ trust_level }}</p>
             </div>
             
             <form id="form_price_quality" action="/submit_price_quality/{{ game_id }}" method="post">
@@ -26,35 +25,39 @@
                 <p class="enter-input-name-title">Цена</p>
                 <div class="product-block">
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="price" value="0" required> Очень низкая
-                    </label>
-                    <label style="margin-top: 10px;">
                         <input type="radio" name="price" value="1"> Низкая 
                     </label>
                     <label style="margin-top: 10px;">
                         <input type="radio" name="price" value="2"> Средняя
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="price" value="3"> Выше среднего
-                    </label>
-                    <label style="margin-top: 10px;">
-                        <input type="radio" name="price" value="4"> Дорогая
-                    </label>
-                    <label style="margin-top: 10px;">
-                        <input type="radio" name="price" value="5"> Очень дорогая
+                        <input type="radio" name="price" value="3"> Дорогая
                     </label>
                 </div>
 
                 <p class="enter-input-name-title">Качество товаров</p>
                 <div class="quality-block">
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="high" required> Высокое
+                        <input type="radio" name="quality" value="3" required> Высокое
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="medium"> Среднее
+                        <input type="radio" name="quality" value="2"> Среднее
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="low"> Низкое
+                        <input type="radio" name="quality" value="1"> Низкое
+                    </label>
+                </div>
+
+                <p class="enter-input-name-title">Реклама</p>
+                <div class="advertisement-block">
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="0"> Не инвестирую 
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="100"> Инвестирую 100
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="500"> Инвестирую 500
                     </label>
                 </div>
 
@@ -115,9 +118,19 @@
             <div class="timer-game">История шагов:</div>
             <ul id="history-list">
                 {% for choice in player_choices %}
-                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}</li>
+                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}, Реклама - {{ choice.advertisement }}</li>
                 {% endfor %}
             </ul>
+
+            <div class="timer-game">Действия противника:</div>
+            <ul id="opponent-history-list">
+                {% for choice in opponent_choices %}
+                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}, Реклама - {{ choice.advertisement }}</li>
+                {% endfor %}
+            </ul>
+            
+
+
         </div>
     
     </div>
@@ -151,7 +164,10 @@
             window.ws.onmessage = function(event) {
                 const message = event.data;
                 
-                if (message.includes("Лучший игрок:")) {
+                if (message.startsWith("opponent_actions|")) {
+                    const [_, round, price, quality, advertisement] = message.split('|');
+                    addOpponentHistoryRow(round, price, quality, advertisement);
+                } else if (message.includes("Лучший игрок:")) {
                     roundResultElement.textContent = message;
 
                     const currentRound = parseInt(roundElement.textContent.split('Раунд ')[1]);
@@ -186,12 +202,13 @@
                     
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.success && data.choice) {
-                            addHistoryRow(data.choice.round, data.choice.price, data.choice.quality);
+                        if (data.success) {
+                            addHistoryRow(data.choice.round, data.choice.price, data.choice.quality, data.choice.advertisement);
+                            if (data.opponent_action) {
+                                addOpponentHistoryRow(data.opponent_action.round, data.opponent_action.price, data.opponent_action.quality, data.opponent_action.advertisement);
+                            }
+                            form.reset();
                         }
-                        console.log('Данные успешно отправлены');
-                        const radioButtons = form.querySelectorAll('input[type="radio"]');
-                        radioButtons.forEach(radio => radio.checked = false);
                     }
                 } catch (error) {
                     console.error('Ошибка при отправке данных:', error);
@@ -199,14 +216,22 @@
             });
         });
 
-        const priceLabels = ["Очень низкая", "Низкая", "Средняя", "Выше среднего", "Дорогая", "Очень дорогая"];
-        const qualityLabels = {high: "Высокое", medium: "Среднее", low: "Низкое"};
+        const priceLabels = {1: "Низкая", 2: "Средняя", 3: "Дорогая"};
+        const qualityLabels = {3: "Высокое", 2: "Среднее", 1: "Низкое"};
+        const advertisementLabels = {0: "Не инвестирую", 100: "Инвестирую", 500: "Инвестирую"};
 
-        function addHistoryRow(round, price, quality) {
+        function addHistoryRow(round, price, quality, advertisement) {
             const historyList = document.getElementById('history-list');
             const li = document.createElement('li');
-            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}`;
-            historyList.appendChild(li);
+            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}, Реклама - ${advertisementLabels[advertisement]}`;
+            historyList.prepend(li);
+        }
+
+        function addOpponentHistoryRow(round, price, quality, advertisement) {
+            const OpponentHistoryList = document.getElementById('opponent-history-list');
+            const li = document.createElement('li');
+            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}, Реклама - ${advertisementLabels[advertisement]}`;
+            OpponentHistoryList.prepend(li);
         }
 
         function changeColor(round, isWinning) {
