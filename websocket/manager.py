@@ -44,6 +44,8 @@ class ConnectionManager:
                 'cur_round': 1,
                 'is_timer_running': False
             }
+            
+        self.player_choices_made[game_id] = {1: False, 2: False}
 
         if player_id in self.games[game_id]['active_connections']:
             return

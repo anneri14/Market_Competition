@@ -64,7 +64,8 @@ async def game_page(request: Request, game_id: str, player_id: int):
 @router.post("/submit_price_quality/{game_id}")
 async def submit_price_quality(request: Request, game_id: str, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...), advertisement: int = Form(...)):
     print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}, advertisement={advertisement}")
-
+    manager.player_choices_made[game_id][player_id] = True
+    
     round_num = manager.get_cur_round(game_id)
 
     if 'player_data' not in manager.games[game_id]:
