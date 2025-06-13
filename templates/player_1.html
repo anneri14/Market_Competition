@@ -190,6 +190,9 @@
                         const data = await response.json();
                         if (data.success) {
                             addHistoryRow(data.choice.round, data.choice.price, data.choice.quality, data.choice.advertisement);
+                            if (data.opponent_action) {
+                                addOpponentHistoryRow(data.opponent_action.round, data.opponent_action.price, data.opponent_action.quality, data.opponent_action.advertisement);
+                            }
                             form.reset();
                         }
                     }

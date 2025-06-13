@@ -130,4 +130,3 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: int)
             await manager.send_to_player(data, game_id, other_player)
     except WebSocketDisconnect:
         manager.disconnect(game_id, player_id)
-
