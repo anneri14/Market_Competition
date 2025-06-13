@@ -4,18 +4,18 @@ import random
 import string
 from services.products_generator import product_generator
 
-SEASONS = ["Зима", "Весна", "Лето", "Осень"]
+SEASONS = ["Зима", "Весна", "Лето", "Осень"] # Сезоны для игровых периодов
 
-ROUND_TIME = 30
-MAX_ROUNDS = 16
+ROUND_TIME = 30 # Длительность раунда в секундах
+MAX_ROUNDS = 16 # Максимальное количество раундов
 
 class ConnectionManager:
     def __init__(self):
         """Инициализация менеджера"""
-        self.active_connections: dict[int, WebSocket] = {}
-        self.games = {}
+        self.active_connections: dict[int, WebSocket] = {} # Активные соединения
+        self.games = {}  # Все игровые сессии
         self.max_rounds = MAX_ROUNDS
-        self.player_choices_made = {}
+        self.player_choices_made = {} # Флаги сделанных ходов
 
         self.PRICE_INFO = {
             'low': {'coef': 1.3, 'income': 0.7},
@@ -53,9 +53,9 @@ class ConnectionManager:
         if player_id in self.games[game_id]['active_connections']:
             return
 
+        # Принятие WebSocket-соединения
         await websocket.accept()
         self.games[game_id]['active_connections'][player_id] = websocket
-
 
         print(f"Игрок {player_id} подключен к игре {game_id}")
 
