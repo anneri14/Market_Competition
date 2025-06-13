@@ -42,9 +42,10 @@ class ConnectionManager:
                 }, 
                 'active_connections': {},
                 'cur_round': 1,
-                'is_timer_running': False
+                'is_timer_running': False,
+                'timer': ROUND_TIME  
             }
-            self.player_choices[game_id] = {1: None, 2: None}
+            self.player_choices_made[game_id] = {1: False, 2: False}
 
         if player_id in self.games[game_id]['active_connections']:
             return
@@ -52,11 +53,11 @@ class ConnectionManager:
         await websocket.accept()
         self.games[game_id]['active_connections'][player_id] = websocket
 
-
         print(f"Игрок {player_id} подключен к игре {game_id}")
 
         if len(self.games[game_id]['active_connections']) == 2:
             self.games[game_id]['is_timer_running'] = True
+            self.games[game_id]['timer'] = ROUND_TIME  # Сбрасываем таймер при старте игры
             asyncio.create_task(self.start_game_timer(game_id))
 
     def disconnect(self, game_id: str, player_id: int) -> None:
@@ -73,11 +74,15 @@ class ConnectionManager:
     async def send_to_player(self, message: str, game_id: str, player_id: int) -> None:
         """Отправка сообщения игроку"""
         if game_id in self.games and player_id in self.games[game_id]['active_connections']:
+            print(f"Отправка сообщения игроку {player_id} в игре {game_id}: {message}")
             await self.games[game_id]['active_connections'][player_id].send_text(message)
+        else:
+            print(f"Ошибка отправки сообщения: игра {game_id} или игрок {player_id} не найдены")
 
     async def send_round_result(self, game_id: str, best_player: int) -> None:
         """Отправка результата раунда обоим игрокам"""
         message = f"Лучший игрок: Игрок {best_player}"
+        print(f"Отправка результата раунда в игре {game_id}: {message}")
         for player_id in self.games[game_id]['active_connections']:
             await self.send_to_player(message, game_id, player_id)
 
@@ -103,7 +108,9 @@ class ConnectionManager:
 
                 if opponent_id in self.games[game_id]['player_data'][round_num]:
                     opponent_data = self.games[game_id]['player_data'][round_num][opponent_id]
-                    await self.send_to_player(f"opponent_actions|{round_num}|"f"{opponent_data['price']}|"f"{opponent_data['quality']}|"f"{opponent_data['advertisement']}", game_id, player_id)
+                    message = f"opponent_actions|{round_num}|{opponent_data['price']}|{opponent_data['quality']}|{opponent_data['advertisement']}"
+                    print(f"Отправка действий противника: {message}")  # Добавляем лог
+                    await self.send_to_player(message, game_id, player_id)
 
         self.games[game_id]['cur_round'] += 1
         self.games[game_id]['timer'] = ROUND_TIME
@@ -114,21 +121,17 @@ class ConnectionManager:
         for player_id in self.games[game_id]['active_connections']:
             await self.send_to_player(f"{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
 
-
     async def start_game_timer(self, game_id: str) -> None:
         """Запуск таймера для игры"""
-        
-        self.games[game_id]['cur_round'] = 1
-        self.games[game_id]['timer'] = ROUND_TIME
-        self.player_choices_made[game_id] = {1: False, 2: False}
-
-
         while self.games[game_id]['is_timer_running'] and self.games[game_id]['cur_round'] <= self.max_rounds:
             if game_id not in self.games:
                 break
         
             cur_season = self.get_season(game_id)
             cur_product = self.get_product()
+
+            # Сбрасываем таймер в начале каждого раунда
+            self.games[game_id]['timer'] = ROUND_TIME
 
             while self.games[game_id]['timer'] > 0 and self.games[game_id]['is_timer_running']:
                 if len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
@@ -142,9 +145,8 @@ class ConnectionManager:
             if game_id not in self.games or not self.games[game_id]['is_timer_running']:
                 break
 
-
-        if self.games[game_id]['timer'] <= 0 or len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
-            await self.end_round(game_id)
+            if self.games[game_id]['timer'] <= 0 or len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
+                await self.end_round(game_id)
 
         if self.games[game_id]['cur_round'] > self.max_rounds:
             await self.end_game(game_id)
