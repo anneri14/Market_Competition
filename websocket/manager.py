@@ -136,20 +136,21 @@ class ConnectionManager:
             cur_season = self.get_season(game_id)
             cur_product = self.get_product()
 
+            for player_id in self.games[game_id]['active_connections']:
+                await self.send_to_player(f"{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
+    
             while self.games[game_id]['timer'] > 0 and self.games[game_id]['is_timer_running']:
                 if len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
                     break
 
                 for player_id in self.games[game_id]['active_connections']:
-                    await self.send_to_player(f"{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
+                    await self.send_to_player(f"{self.games[game_id]['timer']}", game_id, player_id)
                 await asyncio.sleep(1)
                 self.games[game_id]['timer'] -= 1
             
             if game_id not in self.games or not self.games[game_id]['is_timer_running']:
                 break
 
-
-        if self.games[game_id]['timer'] <= 0 or len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
             await self.end_round(game_id)
 
         if self.games[game_id]['cur_round'] > self.max_rounds:
@@ -159,11 +160,11 @@ class ConnectionManager:
         """Определяем сезон на основе номера раунда"""
         cur_round = self.games[game_id].get('cur_round', 1)
 
-        if 1 <= cur_round <= 6:
+        if 1 <= cur_round <= 4:
             return SEASONS[0]
-        elif 7 <= cur_round <= 12:
+        elif 5 <= cur_round <= 8:
             return SEASONS[1]
-        elif 13 <= cur_round <= 18:
+        elif 9 <= cur_round <= 12:
             return SEASONS[2]
         else:
             return SEASONS[3]
