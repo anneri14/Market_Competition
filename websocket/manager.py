@@ -93,17 +93,19 @@ class ConnectionManager:
         for player_id in self.games[game_id]['active_connections']:
             await self.send_to_player("Раунд завершён! Ожидайте следующего раунда.", game_id, player_id)
     
-        if round_num in self.games[game_id].get('player_data', {}):
-            for player_id in self.games[game_id]['active_connections']:
-                if player_id == 1:
-                    opponent_id = 2
-                else:
-                    opponent_id = 1
-
-                if opponent_id in self.games[game_id]['player_data'][round_num]:
-                    opponent_data = self.games[game_id]['player_data'][round_num][opponent_id]
-                    await self.send_to_player(f"opponent_actions|{round_num}|"f"{opponent_data['price']}|"f"{opponent_data['quality']}|"f"{opponent_data['advertisement']}", game_id, player_id)
-
+            if round_num in self.games[game_id].get('player_data', {}):
+                opponent_id = 2 if player_id == 1 else 1
+            if round_num in self.games[game_id].get('player_data', {}) and \
+            opponent_id in self.games[game_id]['player_data'][round_num]:
+                opponent_data = self.games[game_id]['player_data'][round_num][opponent_id]
+                await self.send_to_player(
+                    f"opponent_actions|{round_num}|"
+                    f"{opponent_data['price']}|"
+                    f"{opponent_data['quality']}|"
+                    f"{opponent_data['advertisement']}",
+                    game_id,
+                    player_id
+                )
         self.games[game_id]['cur_round'] += 1
         self.games[game_id]['timer'] = ROUND_TIME
         self.player_choices_made[game_id] = {1: False, 2: False}

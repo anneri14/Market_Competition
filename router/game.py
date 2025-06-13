@@ -92,6 +92,15 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
 
     if len(manager.games[game_id]['player_data'][round_num]) == 2:
+        opponent_id = 2 if player_id == 1 else 1
+        opponent_data = manager.games[game_id]['player_data'][round_num][opponent_id]
+        response_data["opponent_action"] = {
+            "round": round_num,
+            "price": opponent_data["price"],
+            "quality": opponent_data["quality"],
+            "advertisement": opponent_data["advertisement"]
+        }
+        
         p1 = manager.games[game_id]['player_data'][round_num][1]
         p2 = manager.games[game_id]['player_data'][round_num][2]
 
