@@ -113,8 +113,9 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         score_p1 = int(p1["price"]) + int(p1["quality"]) + (int(p1["advertisement"]) / 100)
         score_p2 = int(p2["price"]) + int(p2["quality"]) + (int(p2["advertisement"]) / 100)
 
-        print(f"Подсчет результата: player_id={player_id}, score_p1={score_p1}")
-        print(f"Подсчет результата: player_id={player_id}, score_p2={score_p2}")
+        print(f"Результаты раунда {round_num}:")
+        print(f"  Игрок 1: {score_p1} (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
+        print(f"  Игрок 2: {score_p2} (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
 
         # Определение победителя раунда
         if score_p1 < score_p2:
