@@ -163,12 +163,14 @@
                     changeColor(currentRound, winningPlayer === player_id);
                 } else if (message === "win_page" || message === "fail_page" || message === "draw_page"){
                     window.location.href = `/${message}`;
-                } else {
+                } else if (message.includes("|")) {
                     const [time, round, season, product] = message.split('|');
                     timerElement.innerHTML = time;
                     roundElement.textContent = `Раунд ${round}`;
                     seasonElement.textContent = `Сезон: ${season}`;
                     productElement.textContent = `Товар: ${product}`;
+                } else {
+                    timerElement.textContent = message;
                 }
             };
         }
