@@ -1,0 +1,31 @@
+body {
+    background-color: #A8D0E6;
+    font-family: "Philosopher", sans-serif;
+    font-weight: 400;
+    margin: 0px;
+    padding: 0px;
+}
+
+.header {
+    background-color: #374785;
+    height: 80px;
+    position: relative;
+}
+
+.header_name {
+    color: #ffffff;
+    font-size: 30px;
+    position: absolute;
+    left: 80%;
+    transform: translateX(-20%);
+    white-space: nowrap;
+}
+
+.text-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    font-size: 40px;
+}

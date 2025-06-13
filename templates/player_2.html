@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Landing Page</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/static/css/style_player.css?21">
+<link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<body>
+
+    <div class="header">
+        <p class="round-name" id="round-name">Раунд {{cur_round}}</p>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="background-main">
+            <h class="enter-title">Игрок 2</h>
+            <div class="info-block">
+                <p class="season-name">Сезон: {{ season }}</p>
+                <p class="product-name">Товар: {{ product }}</p>
+            </div>
+            
+            <form id="form_price_quality" action="/submit_price_quality/{{ game_id }}" method="post">
+                <input type="hidden" name="game_id" value="{{ game_id }}">
+                <input type="hidden" name="player_id" value="2">
+                <p class="enter-input-name-title">Цена</p>
+                <div class="product-block">
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="price" value="1"> Низкая 
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="price" value="2"> Средняя
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="price" value="3"> Дорогая
+                    </label>
+                </div>
+
+                <p class="enter-input-name-title">Качество товаров</p>
+                <div class="quality-block">
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="quality" value="3" required> Высокое
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="quality" value="2"> Среднее
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="quality" value="1"> Низкое
+                    </label>
+                </div>
+
+                <p class="enter-input-name-title">Реклама</p>
+                <div class="advertisement-block">
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="0"> Не инвестирую 
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="100"> Инвестирую 100
+                    </label>
+                    <label style="margin-top: 10px;">
+                        <input type="radio" name="advertisement" value="500"> Инвестирую 500
+                    </label>
+                </div>
+
+                <div class="btn">
+                    <button class="btn-start" type="submit">Сохранить</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="content-wrapper-2">
+            <div class="time-block">
+                <div class="timer-game">Оставшееся время:</div>
+                <div id="timer" class="timer-game">30</div>
+            </div>
+
+            <div class="timer-game">Раунды:</div>
+
+            <div class="all-sqr">
+                <div class="sqr">1</div>
+                <div class="sqr">2</div>
+                <div class="sqr">3</div>
+                <div class="sqr">4</div>
+            </div>
+
+            <div class="all-sqr">
+                <div class="sqr">5</div>
+                <div class="sqr">6</div>
+                <div class="sqr">7</div>
+                <div class="sqr">8</div>
+            </div>
+
+            <div class="all-sqr">
+                <div class="sqr">9</div>
+                <div class="sqr">10</div>
+                <div class="sqr">11</div>
+                <div class="sqr">12</div>
+            </div>
+
+            <div class="all-sqr">
+                <div class="sqr">13</div>
+                <div class="sqr">14</div>
+                <div class="sqr">15</div>
+                <div class="sqr">16</div>
+            </div>
+
+            <div id="round-result" class="round-result"></div>
+        </div>
+
+        <div class="content-wrapper-3">
+            <div class="timer-game">История шагов:</div>
+            <ul id="history-list">
+                {% for choice in player_choices %}
+                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}, Реклама - {{ choice.advertisement }}</li>
+                {% endfor %}
+            </ul>
+
+            <div class="timer-game">Действия противника:</div>
+            <ul id="opponent-history-list">
+                {% for choice in opponent_choices %}
+                    <li>Раунд {{ choice.round }}: Цена - {{ choice.price }}, Качество - {{ choice.quality }}, Реклама - {{ choice.advertisement }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const timerElement = document.getElementById('timer');
+        const roundElement = document.querySelector('.round-name');
+        const seasonElement = document.querySelector('.season-name');
+        const productElement = document.querySelector('.product-name');
+        const roundResultElement = document.getElementById('round-result');
+        const form = document.getElementById('form_price_quality');
+        const player_id = 2;
+        const game_id = "{{ game_id }}";
+
+        function initWebSocket() {
+            if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                return;
+            }
+
+            window.ws = new WebSocket(`ws://${window.location.host}/ws/${game_id}/${player_id}`);
+
+            window.ws.onopen = function() {
+                console.log('WebSocket connection established');
+            };
+
+            window.ws.onclose = function() {
+                console.log('WebSocket connection closed');
+                setTimeout(initWebSocket, 1000);
+            };
+
+            window.ws.onmessage = function(event) {
+                const message = event.data;
+                
+                if (message.startsWith("opponent_actions|")) {
+                    const [_, round, price, quality, advertisement] = message.split('|');
+                    addOpponentHistoryRow(round, price, quality, advertisement);
+                } else if (message.includes("Лучший игрок:")) {
+                    roundResultElement.textContent = message;
+
+                    const currentRound = parseInt(roundElement.textContent.split('Раунд ')[1]);
+                    const winningPlayer = parseInt(message.split("Игрок ")[1]);
+
+                    changeColor(currentRound, winningPlayer === player_id);
+
+                } else if (message === "win_page" || message === "fail_page" || message === "draw_page"){
+                    window.location.href = `/${message}`;
+                } else {
+                    const [time, round, season, product] = message.split('|');
+                    timerElement.innerHTML = time;
+                    roundElement.textContent = `Раунд ${round}`;
+                    seasonElement.textContent = `Сезон: ${season}`;
+                    productElement.textContent = `Товар: ${product}`;
+                }
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initWebSocket();
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                try {
+                    const response = await fetch('/submit_price_quality/{{ game_id }}', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            addHistoryRow(data.choice.round, data.choice.price, data.choice.quality, data.choice.advertisement);
+                            if (data.opponent_action) {
+                                addOpponentHistoryRow(data.opponent_action.round, data.opponent_action.price, data.opponent_action.quality, data.opponent_action.advertisement);
+                            }
+                            form.reset();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка при отправке данных:', error);
+                }
+            });
+        });
+
+        const priceLabels = {1: "Низкая", 2: "Средняя", 3: "Дорогая"};
+        const qualityLabels = {3: "Высокое", 2: "Среднее", 1: "Низкое"};
+        const advertisementLabels = {0: "Не инвестирую", 100: "Инвестирую", 500: "Инвестирую"};
+
+        function addHistoryRow(round, price, quality, advertisement) {
+            const historyList = document.getElementById('history-list');
+            const li = document.createElement('li');
+            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}, Реклама - ${advertisementLabels[advertisement]}`;
+            historyList.prepend(li);
+        }
+
+        function addOpponentHistoryRow(round, price, quality, advertisement) {
+            const OpponentHistoryList = document.getElementById('opponent-history-list');
+            const li = document.createElement('li');
+            li.textContent = `Раунд ${round}: Цена - ${priceLabels[price]}, Качество - ${qualityLabels[quality]}, Реклама - ${advertisementLabels[advertisement]}`;
+            OpponentHistoryList.prepend(li);
+        }
+
+        function changeColor(round, isWinning) {
+            const squares = document.querySelectorAll('.sqr');
+            if (squares[round - 1]) {
+                if (isWinning) {
+                    squares[round - 1].style.backgroundColor = '#28d45c';
+                } else {
+                    squares[round - 1].style.backgroundColor = '#ed4264';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

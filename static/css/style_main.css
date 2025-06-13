@@ -1,0 +1,83 @@
+body {
+    background-color: #A8D0E6;
+    font-family: "Philosopher", sans-serif;
+    font-weight: 400;
+    margin: 0px;
+    padding: 0px;
+}
+
+.header {
+    background-color: #374785;
+    height: 80px;
+    position: relative;
+}
+
+.header_name {
+    color: #ffffff;
+    font-size: 30px;
+    position: absolute;
+    left: 80%;
+    transform: translateX(-20%);
+    white-space: nowrap;
+}
+
+.container {
+    display: flex;
+    height: 80vh;
+}
+
+.left-half {
+    flex: 1;
+    background-color: #A8D0E6;
+    color: #24305E;
+    font-size: 23px;
+    margin-left: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.right-half {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #A8D0E6;
+    position: relative;
+}
+
+.btn-start {
+    background-color: #F76C6C;
+    border-radius: 5px;
+    padding: 15px 30px;
+    text-align: center;
+    font-size: 25px;
+    color: #ffffff;
+    border: none;
+    font-family: "Philosopher", sans-serif;
+    margin: 10px;
+}
+
+a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.game-id {
+    font-size: 25px;
+    color: #24305E;
+}
+
+.enter-input-name {
+    width: 30%;
+    border-radius: 5px;
+    border: 1px #24305E solid;
+    height: 25px;
+    font-family: "Philosopher", sans-serif;
+    padding-left: 10px;
+    font-size: 15px;
+    color: #24305E;
+}
