@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <meta charset="UTF-8">
 <title>Landing Page</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -13,7 +13,8 @@
 
     <div class="content-wrapper">
         <div class="background-main">
-            <h class="enter-title">Игрок 2</h>
+            <h class="enter-title">Игрок 1</h>
+
             <div class="info-block">
                 <p class="season-name">Сезон: {{ season }}</p>
                 <p class="product-name">Товар: {{ product }}</p>
@@ -21,7 +22,7 @@
             
             <form id="form_price_quality" action="/submit_price_quality/{{ game_id }}" method="post">
                 <input type="hidden" name="game_id" value="{{ game_id }}">
-                <input type="hidden" name="player_id" value="2">
+                <input type="hidden" name="player_id" value="1">
                 <p class="enter-input-name-title">Цена</p>
                 <div class="product-block">
                     <label style="margin-top: 10px;">
@@ -130,7 +131,7 @@
         const productElement = document.querySelector('.product-name');
         const roundResultElement = document.getElementById('round-result');
         const form = document.getElementById('form_price_quality');
-        const player_id = 2;
+        const player_id = 1;
         const game_id = "{{ game_id }}";
 
         function initWebSocket() {
@@ -157,12 +158,9 @@
                     addOpponentHistoryRow(round, price, quality, advertisement);
                 } else if (message.includes("Лучший игрок:")) {
                     roundResultElement.textContent = message;
-
                     const currentRound = parseInt(roundElement.textContent.split('Раунд ')[1]);
                     const winningPlayer = parseInt(message.split("Игрок ")[1]);
-
                     changeColor(currentRound, winningPlayer === player_id);
-
                 } else if (message === "win_page" || message === "fail_page" || message === "draw_page"){
                     window.location.href = `/${message}`;
                 } else if (message.includes("|")) {
