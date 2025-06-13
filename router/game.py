@@ -65,7 +65,7 @@ async def game_page(request: Request, game_id: str, player_id: int):
 async def submit_price_quality(request: Request, game_id: str, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...), advertisement: int = Form(...)):
     print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}, advertisement={advertisement}")
     manager.player_choices_made[game_id][player_id] = True
-    
+
     round_num = manager.get_cur_round(game_id)
 
     if 'player_data' not in manager.games[game_id]:
@@ -93,7 +93,6 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
 
     if len(manager.games[game_id]['player_data'][round_num]) == 2:
-        
         p1 = manager.games[game_id]['player_data'][round_num][1]
         p2 = manager.games[game_id]['player_data'][round_num][2]
 
@@ -112,8 +111,33 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         else:
             best_player = random.choice([1, 2])
 
+        if 'win_counts' not in manager.games[game_id]:
+            manager.games[game_id]['win_counts'] = {1: 0, 2: 0}
+        manager.games[game_id]['win_counts'][best_player] += 1
+
         await manager.send_round_result(game_id, best_player)
-        await manager.end_round(game_id)
+
+        if manager.games[game_id]['cur_round'] >= manager.max_rounds:
+            win_counts = manager.games[game_id]['win_counts']
+            game_winner = None
+            
+            if win_counts[1] > win_counts[2]:
+                game_winner = 1
+            elif win_counts[2] > win_counts[1]:
+                game_winner = 2
+            
+            for player_id in manager.games[game_id]['active_connections']:
+                if game_winner is None:
+                    await manager.send_to_player("draw_page", game_id, player_id)
+                elif player_id == game_winner:
+                    await manager.send_to_player("win_page", game_id, player_id)
+                else:
+                    await manager.send_to_player("fail_page", game_id, player_id) 
+            
+            await manager.end_game(game_id)
+        else:
+            await manager.end_round(game_id)
+
    
 
     return response_data

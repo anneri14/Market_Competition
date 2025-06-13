@@ -161,8 +161,8 @@
                     const currentRound = parseInt(roundElement.textContent.split('Раунд ')[1]);
                     const winningPlayer = parseInt(message.split("Игрок ")[1]);
                     changeColor(currentRound, winningPlayer === player_id);
-                } else if (message == "Игра окончена!") {
-                    window.location.href = "/win_page";
+                } else if (message === "win_page" || message === "fail_page" || message === "draw_page"){
+                    window.location.href = `/${message}`;
                 } else {
                     const [time, round, season, product] = message.split('|');
                     timerElement.innerHTML = time;

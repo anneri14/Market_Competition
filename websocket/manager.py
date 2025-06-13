@@ -29,6 +29,8 @@ class ConnectionManager:
             'high': {'coef': 1.3, 'cost': 100}
         }
 
+        self.win_counts = {}
+
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
         if not product_generator.products_inited:
@@ -44,6 +46,7 @@ class ConnectionManager:
                 'cur_round': 1,
                 'is_timer_running': False
             }
+            self.win_counts[game_id] = {1: 0, 2: 0}
             
         self.player_choices_made[game_id] = {1: False, 2: False}
 

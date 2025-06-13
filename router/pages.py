@@ -13,9 +13,13 @@ async def welcome(request: Request, name: str):
     return templates.TemplateResponse("main_page.html", {"request": request, "name": name})
 
 @router.get("/win_page", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def win_page(request: Request):
     return templates.TemplateResponse("win_page.html", {"request": request})
 
 @router.get("/fail_page", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def fail_page(request: Request):
     return templates.TemplateResponse("fail_page.html", {"request": request})
+
+@router.get("/draw_page", response_class=HTMLResponse)
+async def draw_page(request: Request):
+    return templates.TemplateResponse("draw_page.html", {"request": request})
