@@ -132,6 +132,7 @@
         const roundResultElement = document.getElementById('round-result');
         const form = document.getElementById('form_price_quality');
         const player_id = 1;
+        const game_id = "{{ game_id }}";
 
         function initWebSocket() {
             if (window.ws && window.ws.readyState === WebSocket.OPEN) {
