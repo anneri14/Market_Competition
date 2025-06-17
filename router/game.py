@@ -148,7 +148,7 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
         if invest_p1 < invest_p2:
             best_player = 2
-        elif invest_p2 > invest_p1:
+        elif invest_p1 > invest_p2:
             best_player = 1
         else:
             if int(p1['price']) < int(p2['price']):
@@ -167,8 +167,8 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             manager.games[game_id]['players'][2]['budget'] -= win_cost
             manager.games[game_id]['players'][1]['budget'] += win_cost * 0.5 
 
-        manager.games[game_id]['players'][1]['budget'] += 30
-        manager.games[game_id]['players'][2]['budget'] += 30
+        manager.games[game_id]['players'][1]['budget'] += 50
+        manager.games[game_id]['players'][2]['budget'] += 50
 
         print(f"  Игрок 1: затраты={cost_total_p1}, новый бюджет={manager.games[game_id]['players'][1]['budget']}, (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
         print(f"  Игрок 2: затраты={cost_total_p2}, новый бюджет={manager.games[game_id]['players'][2]['budget']}, (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
