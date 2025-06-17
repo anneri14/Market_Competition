@@ -17,20 +17,6 @@ class ConnectionManager:
         self.max_rounds = MAX_ROUNDS
         self.player_choices_made = {} # Флаги сделанных ходов
 
-        self.PRICE_INFO = {
-            'low': {'coef': 1.3, 'income': 0.7},
-            'medium': {'coef': 1, 'income': 1},
-            'high': {'coef': 0.7, 'income': 1.3}
-        }
-
-        self.QUALITY_INFO = {
-            'low': {'coef': 0.7, 'cost': 0},
-            'medium': {'coef': 1, 'cost': 50},
-            'high': {'coef': 1.3, 'cost': 100}
-        }
-
-        self.win_counts = {}
-
     async def connect(self, game_id: str, player_id: int, websocket: WebSocket) -> None:
         """Создание нового подключения игрока"""
         if not product_generator.products_inited:
@@ -39,14 +25,13 @@ class ConnectionManager:
         if game_id not in self.games:
             self.games[game_id] = {
                 'players': {
-                    1: {"budget": 1000, "score": 0, "brand": 0},
-                    2: {"budget": 1000, "score": 0, "brand": 0}
+                    1: {"budget": 100, "win_score": 0},
+                    2: {"budget": 100, "win_score": 0}
                 }, 
                 'active_connections': {},
                 'cur_round': 1,
                 'is_timer_running': False
             }
-            self.win_counts[game_id] = {1: 0, 2: 0}
             
         self.player_choices_made[game_id] = {1: False, 2: False}
 
@@ -97,11 +82,20 @@ class ConnectionManager:
 
         for player_id in self.games[game_id]['active_connections']:
             await self.send_to_player("Раунд завершён! Ожидайте следующего раунда.", game_id, player_id)
-    
+
+            player_budget = self.games[game_id]['players'][player_id]['budget']
+            await self.send_to_player(
+                f"round_end|{round_num}|{player_budget}",
+                game_id,
+                player_id
+            )
+
             if round_num in self.games[game_id].get('player_data', {}):
-                opponent_id = 2 if player_id == 1 else 1
-            if round_num in self.games[game_id].get('player_data', {}) and \
-            opponent_id in self.games[game_id]['player_data'][round_num]:
+                if player_id == 1:
+                    opponent_id = 2
+                else:
+                    opponent_id = 1
+            if round_num in self.games[game_id].get('player_data', {}) and opponent_id in self.games[game_id]['player_data'][round_num]:
                 opponent_data = self.games[game_id]['player_data'][round_num][opponent_id]
                 await self.send_to_player(
                     f"opponent_actions|{round_num}|"
@@ -111,6 +105,7 @@ class ConnectionManager:
                     game_id,
                     player_id
                 )
+                
         self.games[game_id]['cur_round'] += 1
         self.games[game_id]['timer'] = ROUND_TIME
         self.player_choices_made[game_id] = {1: False, 2: False}
@@ -118,7 +113,12 @@ class ConnectionManager:
         cur_season = self.get_season(game_id)
         cur_product = self.get_product()
         for player_id in self.games[game_id]['active_connections']:
-            await self.send_to_player(f"{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
+            player_budget = self.games[game_id]['players'][player_id]['budget']
+            await self.send_to_player(
+                f"new_round|{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}", 
+                game_id, 
+                player_id
+            )
 
 
     async def start_game_timer(self, game_id: str) -> None:
@@ -137,7 +137,12 @@ class ConnectionManager:
             cur_product = self.get_product()
 
             for player_id in self.games[game_id]['active_connections']:
-                await self.send_to_player(f"{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}", game_id, player_id)
+                player_budget = self.games[game_id]['players'][player_id]['budget']
+                await self.send_to_player(
+                    f"new_round|{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}", 
+                    game_id, 
+                    player_id
+                )
     
             while self.games[game_id]['timer'] > 0 and self.games[game_id]['is_timer_running']:
                 if len(self.games[game_id].get('player_data', {}).get(self.games[game_id]['cur_round'], {})) == 2:
@@ -180,12 +185,17 @@ class ConnectionManager:
             game_id = ''.join(random.choice(symb) for _ in range(10))
             if game_id not in self.games:
                 self.games[game_id] = {
+                    'players': {
+                        1: {"budget": 100, "win_score": 0},
+                        2: {"budget": 100, "win_score": 0}
+                    },
+                    'player_data': {},
                     'active_connections': {},
                     'cur_round': 1,
                     'is_timer_running': False,
-                    'player_data': {},
                     'timer': ROUND_TIME
                 }
+                self.player_choices_made[game_id] = {1: False, 2: False}
                 return game_id
     
     def join_game(self, game_id: str) -> int:

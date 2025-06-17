@@ -73,7 +73,21 @@ async def game_page(request: Request, game_id: str, player_id: int):
 @router.post("/submit_price_quality/{game_id}")
 async def submit_price_quality(request: Request, game_id: str, player_id: int = Form(...), price: int = Form(...), quality: str = Form(...), advertisement: int = Form(...)):
     """Обработчик POST-запросов, обработка игровых ходов"""
-    
+    if game_id not in manager.games:
+        manager.games[game_id] = {
+            'players': {
+                1: {"budget": 100, "win_score": 0},
+                2: {"budget": 100, "win_score": 0}
+            },
+            'player_data': {},
+            'active_connections': {},
+            'cur_round': 1,
+            'is_timer_running': False
+        }
+
+    if game_id not in manager.player_choices_made:
+        manager.player_choices_made[game_id] = {1: False, 2: False}
+
     # Логирование полученных данных
     print(f"Данные получены: player_id={player_id}, price={price}, quality={quality}, advertisement={advertisement}")
     manager.player_choices_made[game_id][player_id] = True
@@ -85,7 +99,7 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         manager.games[game_id]['player_data'] = {}
     if round_num not in manager.games[game_id]['player_data']:
         manager.games[game_id]['player_data'][round_num] = {}
-        
+
     manager.games[game_id]['player_data'][round_num][player_id] = {
         "price": price,
         "quality": quality,
@@ -109,36 +123,62 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         p1 = manager.games[game_id]['player_data'][round_num][1]
         p2 = manager.games[game_id]['player_data'][round_num][2]
 
-        # Расчет результатов раунда
-        score_p1 = int(p1["price"]) + int(p1["quality"]) + (int(p1["advertisement"]) / 100)
-        score_p2 = int(p2["price"]) + int(p2["quality"]) + (int(p2["advertisement"]) / 100)
+        p1_budget = manager.games[game_id]['players'][1]['budget']
+        p2_budget = manager.games[game_id]['players'][2]['budget']
 
         print(f"Результаты раунда {round_num}:")
-        print(f"  Игрок 1: {score_p1} (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
-        print(f"  Игрок 2: {score_p2} (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
+        print(f"  Игрок 1: старый бюджет={manager.games[game_id]['players'][1]['budget']}")
+        print(f"  Игрок 2: старый бюджет={manager.games[game_id]['players'][2]['budget']}")
+
+        # Расчет результатов раунда
+        cost_advert_p1 = (int(p1["advertisement"]) / 100) * int(p1_budget)
+        cost_quality_p1 = int(p1["quality"])
+        cost_total_p1 = cost_advert_p1 + cost_quality_p1
+        manager.games[game_id]['players'][1]['budget'] = p1_budget - cost_total_p1
+
+        cost_advert_p2 = (int(p2["advertisement"]) / 100) * int(p2_budget)
+        cost_quality_p2 = int(p2["quality"])
+        cost_total_p2 = cost_advert_p2 + cost_quality_p2
+        manager.games[game_id]['players'][1]['budget'] = p1_budget - cost_total_p1
+
 
         # Определение победителя раунда
-        if score_p1 < score_p2:
+        invest_p1 = int(p1["quality"]) + int(p1["advertisement"])
+        invest_p2 = int(p2["quality"]) + int(p2["advertisement"])
+
+        if invest_p1 < invest_p2:
             best_player = 2
-        elif score_p1 > score_p2:
+            manager.games[game_id]['players'][2]['budget'] += 50
+        elif invest_p2 > invest_p1:
             best_player = 1
+            manager.games[game_id]['players'][1]['budget'] += 50
         else:
-            best_player = random.choice([1, 2])
+            if int(p1['price']) < int(p1['price']):
+                best_player = 1
+                manager.games[game_id]['players'][1]['budget'] += 50
+            elif int(p1['price']) > int(p1['price']):
+                best_player = 2
+                manager.games[game_id]['players'][2]['budget'] += 50
+            else:
+                best_player = random.choice([1, 2])
+                manager.games[game_id]['players'][best_player]['budget'] += 50
+
+        print(f"  Игрок 1: затраты={cost_total_p1}, новый бюджет={manager.games[game_id]['players'][1]['budget']}, (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
+        print(f"  Игрок 2: затраты={cost_total_p2}, новый бюджет={manager.games[game_id]['players'][2]['budget']}, (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
+
 
         # Обновление счетчика побед
-        if 'win_counts' not in manager.games[game_id]:
-            manager.games[game_id]['win_counts'] = {1: 0, 2: 0}
-        manager.games[game_id]['win_counts'][best_player] += 1
+        manager.games[game_id]['players'][best_player]['win_score'] += 1
 
         await manager.send_round_result(game_id, best_player)
 
         if manager.games[game_id]['cur_round'] >= manager.max_rounds:
-            win_counts = manager.games[game_id]['win_counts']
+            win_counts = manager.games[game_id]['players']
             game_winner = None
             
-            if win_counts[1] > win_counts[2]:
+            if win_counts[1]['win_score'] > win_counts[2]['win_score']:
                 game_winner = 1
-            elif win_counts[2] > win_counts[1]:
+            elif win_counts[2]['win_score'] > win_counts[1]['win_score']:
                 game_winner = 2
             
             # Отправка результатов игры

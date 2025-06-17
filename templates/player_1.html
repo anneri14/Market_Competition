@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <meta charset="UTF-8">
-<title>Landing Page</title>
+<title>Экономическая игра</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="/static/css/style_player.css?21">
+<link rel="stylesheet" href="/static/css/style_player.css?22">
 <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <body>
 
@@ -18,6 +18,7 @@
             <div class="info-block">
                 <p class="season-name">Сезон: {{ season }}</p>
                 <p class="product-name">Товар: {{ product }}</p>
+                <p class="budget-show">Бюджет: <span id="current-budget">100</span></p>
             </div>
             
             <form id="form_price_quality" action="/submit_price_quality/{{ game_id }}" method="post">
@@ -26,7 +27,7 @@
                 <p class="enter-input-name-title">Цена</p>
                 <div class="product-block">
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="price" value="1"> Низкая 
+                        <input type="radio" name="price" value="1"> Низкая
                     </label>
                     <label style="margin-top: 10px;">
                         <input type="radio" name="price" value="2"> Средняя
@@ -39,13 +40,13 @@
                 <p class="enter-input-name-title">Качество товаров</p>
                 <div class="quality-block">
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="3" required> Высокое
+                        <input type="radio" name="quality" value="70" required> Высокое (70 ед.) 
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="2"> Среднее
+                        <input type="radio" name="quality" value="40"> Среднее (40 ед.) 
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="quality" value="1"> Низкое
+                        <input type="radio" name="quality" value="20"> Низкое (20 ед.)
                     </label>
                 </div>
 
@@ -55,10 +56,10 @@
                         <input type="radio" name="advertisement" value="0"> Не инвестирую 
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="advertisement" value="100"> Инвестирую 100
+                        <input type="radio" name="advertisement" value="10"> Инвестирую 10%
                     </label>
                     <label style="margin-top: 10px;">
-                        <input type="radio" name="advertisement" value="300"> Инвестирую 500
+                        <input type="radio" name="advertisement" value="30"> Инвестирую 30%
                     </label>
                 </div>
 
@@ -129,10 +130,12 @@
         const roundElement = document.querySelector('.round-name');
         const seasonElement = document.querySelector('.season-name');
         const productElement = document.querySelector('.product-name');
+        const budgetElement = document.getElementById('current-budget');
         const roundResultElement = document.getElementById('round-result');
         const form = document.getElementById('form_price_quality');
         const player_id = 1;
         const game_id = "{{ game_id }}";
+
 
         function initWebSocket() {
             if (window.ws && window.ws.readyState === WebSocket.OPEN) {
@@ -152,8 +155,17 @@
 
             window.ws.onmessage = function(event) {
                 const message = event.data;
-                
-                if (message.startsWith("opponent_actions|")) {
+                if (message.startsWith("new_round|")) {
+                    const [_, time, round, season, product, budget] = message.split('|');
+                    timerElement.innerHTML = time;
+                    roundElement.textContent = `Раунд ${round}`;
+                    seasonElement.textContent = `Сезон: ${season}`;
+                    productElement.textContent = `Товар: ${product}`;
+                    updateBudget(budget);
+                } else if (message.startsWith("round_end|")) {
+                    const [_, round, budget] = message.split('|');
+                    updateBudget(budget);
+                } if (message.startsWith("opponent_actions|")) {
                     const [_, round, price, quality, advertisement] = message.split('|');
                     addOpponentHistoryRow(round, price, quality, advertisement);
                 } else if (message.includes("Лучший игрок:")) {
@@ -163,16 +175,14 @@
                     changeColor(currentRound, winningPlayer === player_id);
                 } else if (message === "win_page" || message === "fail_page" || message === "draw_page"){
                     window.location.href = `/${message}`;
-                } else if (message.includes("|")) {
-                    const [time, round, season, product] = message.split('|');
-                    timerElement.innerHTML = time;
-                    roundElement.textContent = `Раунд ${round}`;
-                    seasonElement.textContent = `Сезон: ${season}`;
-                    productElement.textContent = `Товар: ${product}`;
                 } else {
                     timerElement.textContent = message;
                 }
             };
+        }
+
+        function updateBudget(budget) {
+            document.getElementById('current-budget').textContent = budget;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -205,8 +215,8 @@
         });
 
         const priceLabels = {1: "Низкая", 2: "Средняя", 3: "Дорогая"};
-        const qualityLabels = {3: "Высокое", 2: "Среднее", 1: "Низкое"};
-        const advertisementLabels = {0: "Не инвестирую", 100: "Инвестирую 100", 300: "Инвестирую 500"};
+        const qualityLabels = {70: "Высокое", 40: "Среднее", 20: "Низкое"};
+        const advertisementLabels = {0: "Не инвестирую", 10: "Инвестирую 10%", 30: "Инвестирую 30%"};
 
         function addHistoryRow(round, price, quality, advertisement) {
             const historyList = document.getElementById('history-list');

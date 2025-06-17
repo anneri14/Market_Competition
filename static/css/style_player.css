@@ -161,3 +161,17 @@ a {
     color: #333;
     text-align: center;
 }
+
+.budget-show {
+    text-align: left;
+    margin-left: 30px;
+    margin-bottom: 3px;
+    font-size: 23px;
+}
+
+.bank-show {
+    text-align: left;
+    margin-left: 30px;
+    margin-bottom: 3px;
+    font-size: 23px;
+}
