@@ -139,7 +139,7 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
         cost_advert_p2 = (int(p2["advertisement"]) / 100) * int(p2_budget)
         cost_quality_p2 = int(p2["quality"])
         cost_total_p2 = cost_advert_p2 + cost_quality_p2
-        manager.games[game_id]['players'][1]['budget'] = p1_budget - cost_total_p1
+        manager.games[game_id]['players'][2]['budget'] = p2_budget - cost_total_p2
 
 
         # Определение победителя раунда
@@ -148,20 +148,27 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
         if invest_p1 < invest_p2:
             best_player = 2
-            manager.games[game_id]['players'][2]['budget'] += 50
         elif invest_p2 > invest_p1:
             best_player = 1
-            manager.games[game_id]['players'][1]['budget'] += 50
         else:
-            if int(p1['price']) < int(p1['price']):
+            if int(p1['price']) < int(p2['price']):
                 best_player = 1
-                manager.games[game_id]['players'][1]['budget'] += 50
-            elif int(p1['price']) > int(p1['price']):
+            elif int(p1['price']) > int(p2['price']):
                 best_player = 2
-                manager.games[game_id]['players'][2]['budget'] += 50
             else:
                 best_player = random.choice([1, 2])
-                manager.games[game_id]['players'][best_player]['budget'] += 50
+            
+        if best_player == 1:
+            win_cost = cost_total_p1 * 10 / 100
+            manager.games[game_id]['players'][1]['budget'] -= win_cost #налог на победу
+            manager.games[game_id]['players'][2]['budget'] += win_cost * 0.5  #субсидия проигравшему
+        else:
+            win_cost = cost_total_p2 * 10 / 100
+            manager.games[game_id]['players'][2]['budget'] -= win_cost
+            manager.games[game_id]['players'][1]['budget'] += win_cost * 0.5 
+
+        manager.games[game_id]['players'][1]['budget'] += 30
+        manager.games[game_id]['players'][2]['budget'] += 30
 
         print(f"  Игрок 1: затраты={cost_total_p1}, новый бюджет={manager.games[game_id]['players'][1]['budget']}, (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
         print(f"  Игрок 2: затраты={cost_total_p2}, новый бюджет={manager.games[game_id]['players'][2]['budget']}, (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
