@@ -143,20 +143,15 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
 
         # Определение победителя раунда
-        invest_p1 = int(p1["quality"]) + int(p1["advertisement"])
-        invest_p2 = int(p2["quality"]) + int(p2["advertisement"])
+        invest_p1 = int(p1["quality"]) * 0.3 + int(p1["advertisement"]) * 0.3 + (100 - p1["price"]) * 0.4
+        invest_p2 = int(p2["quality"]) * 0.3 + int(p2["advertisement"]) * 0.3 + (100 - p2["price"]) * 0.4
 
         if invest_p1 < invest_p2:
             best_player = 2
         elif invest_p1 > invest_p2:
             best_player = 1
         else:
-            if int(p1['price']) < int(p2['price']):
-                best_player = 1
-            elif int(p1['price']) > int(p2['price']):
-                best_player = 2
-            else:
-                best_player = random.choice([1, 2])
+            best_player = random.choice([1, 2])
             
         if best_player == 1:
             win_cost = cost_total_p1 * 10 / 100
