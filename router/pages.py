@@ -16,15 +16,15 @@ async def welcome(request: Request, name: str):
 
 @router.get("/win_page", response_class=HTMLResponse)
 async def win_page(request: Request):
-    """Обработчик GET-запросов, возвращает HTML-страницу win_page.html"""
+    """Обработчик GET-запросов, возвращает HTML-страницу win_page.html в случае победы"""
     return templates.TemplateResponse("win_page.html", {"request": request})
 
 @router.get("/fail_page", response_class=HTMLResponse)
 async def fail_page(request: Request):
-    """Обработчик GET-запросов, возвращает HTML-страницу fail_page.html"""
+    """Обработчик GET-запросов, возвращает HTML-страницу fail_page.html в случае проигрыша"""
     return templates.TemplateResponse("fail_page.html", {"request": request})
 
 @router.get("/draw_page", response_class=HTMLResponse)
 async def draw_page(request: Request):
-    """Обработчик GET-запросов, возвращает HTML-страницу draw_page.html"""
+    """Обработчик GET-запросов, возвращает HTML-страницу draw_page.html в случае ничьи"""
     return templates.TemplateResponse("draw_page.html", {"request": request})
