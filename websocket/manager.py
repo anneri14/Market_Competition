@@ -95,8 +95,9 @@ class ConnectionManager:
 
             #отправка текущего бюджета
             player_budget = self.games[game_id]['players'][player_id]['budget']
+            player_money = self.games[game_id]['players'][player_id]['win_score']
             await self.send_to_player(
-                f"round_end|{round_num}|{player_budget}",
+                f"round_end|{round_num}|{player_budget}|{player_money}",
                 game_id,
                 player_id
             )
@@ -128,8 +129,9 @@ class ConnectionManager:
         cur_product = self.get_product()
         for player_id in self.games[game_id]['active_connections']:
             player_budget = self.games[game_id]['players'][player_id]['budget']
+            player_money = self.games[game_id]['players'][player_id]['win_score']
             await self.send_to_player(
-                f"new_round|{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}", 
+                f"new_round|{ROUND_TIME}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}|{player_money}", 
                 game_id, 
                 player_id
             )
@@ -152,8 +154,9 @@ class ConnectionManager:
             cur_product = self.get_product()
             for player_id in self.games[game_id]['active_connections']:
                 player_budget = self.games[game_id]['players'][player_id]['budget']
+                player_money = self.games[game_id]['players'][player_id]['win_score']
                 await self.send_to_player(
-                    f"new_round|{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}", 
+                    f"new_round|{self.games[game_id]['timer']}|{self.games[game_id]['cur_round']}|{cur_season}|{cur_product}|{player_budget}|{player_money}", 
                     game_id, 
                     player_id
                 )
@@ -169,7 +172,8 @@ class ConnectionManager:
                 
                 await asyncio.sleep(1)
                 self.games[game_id]['timer'] -= 1
-            
+                
+
             if game_id not in self.games or not self.games[game_id]['is_timer_running']:
                 break
 
