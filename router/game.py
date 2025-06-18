@@ -164,7 +164,7 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             manager.games[game_id]['players'][1]['budget'] += income_p1 
             manager.games[game_id]['players'][1]['budget'] -= win_cost #налог на победу 1 игрока
             manager.games[game_id]['players'][2]['budget'] += win_cost * 0.5  #субсидия проигравшему
-            manager.games[game_id]['players'][2]['budget'] += 30
+            manager.games[game_id]['players'][2]['budget'] += 50
 
             manager.games[game_id]['players'][1]['win_score'] += income_p1 
             manager.games[game_id]['players'][1]['win_score'] -= win_cost
@@ -173,7 +173,7 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             manager.games[game_id]['players'][2]['budget'] += income_p2
             manager.games[game_id]['players'][2]['budget'] -= win_cost #налог на победу 2 игрока
             manager.games[game_id]['players'][1]['budget'] += win_cost * 0.5 #субсидия проигравшему
-            manager.games[game_id]['players'][1]['budget'] += 30
+            manager.games[game_id]['players'][1]['budget'] += 50
 
             manager.games[game_id]['players'][2]['win_score'] += income_p2
             manager.games[game_id]['players'][2]['win_score'] -= win_cost 
