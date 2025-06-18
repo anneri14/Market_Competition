@@ -176,8 +176,8 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             manager.games[game_id]['players'][2]['win_score'] += income_p2
             manager.games[game_id]['players'][2]['win_score'] -= win_cost 
 
-        manager.games[game_id]['players'][1]['budget'] += 30 
-        manager.games[game_id]['players'][2]['budget'] += 30
+        manager.games[game_id]['players'][1]['budget'] += 50 
+        manager.games[game_id]['players'][2]['budget'] += 50
          
 
         # Логирование полученных данных
