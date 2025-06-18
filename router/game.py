@@ -150,11 +150,11 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
 
         def calculate_income(price):
             if price == 10:  
-                return 60 
+                return 40 
             elif price == 40:
-                return 40
-            else: 
                 return 20
+            else: 
+                return 10
 
         income_p1 = calculate_income(p1["price"])
         income_p2 = calculate_income(p2["price"])
@@ -176,8 +176,8 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             manager.games[game_id]['players'][2]['win_score'] += income_p2
             manager.games[game_id]['players'][2]['win_score'] -= win_cost 
 
-        manager.games[game_id]['players'][1]['budget'] += 50 
-        manager.games[game_id]['players'][2]['budget'] += 50
+        manager.games[game_id]['players'][1]['budget'] += 30 
+        manager.games[game_id]['players'][2]['budget'] += 30
          
 
         # Логирование полученных данных
