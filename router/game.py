@@ -68,13 +68,14 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
     if game_id not in manager.games:
         manager.games[game_id] = {
             'players': {
-                1: {"budget": 100, "win_score": 0}, #начальный бюджет и счетчик побед для игрока 1
-                2: {"budget": 100, "win_score": 0} #начальный бюджет и счетчик побед для игрока 2
+                1: {"budget": 100, "win_score": 0}, #начальный бюджет и счетчик зароботка для игрока 1
+                2: {"budget": 100, "win_score": 0} #начальный бюджет и счетчик зароботка для игрока 2
             },
             'player_data': {}, #хранение данных игроков
             'active_connections': {}, #активные соединения
             'cur_round': 1, #текущий раунд
-            'is_timer_running': False #флаг таймера
+            'is_timer_running': False, #флаг таймера
+            "timer_expired": False
         }
 
     #инициализация флагов - сделал игрок выбор или нет
@@ -146,26 +147,44 @@ async def submit_price_quality(request: Request, game_id: str, player_id: int = 
             best_player = 1
         else:
             best_player = random.choice([1, 2])
-            
+
+        def calculate_income(price):
+            if price == 10:  
+                return 60 
+            elif price == 40:
+                return 40
+            else: 
+                return 20
+
+        income_p1 = calculate_income(p1["price"])
+        income_p2 = calculate_income(p2["price"])
+
         if best_player == 1:
             win_cost = cost_total_p1 * 10 / 100
+            manager.games[game_id]['players'][1]['budget'] += income_p1 
             manager.games[game_id]['players'][1]['budget'] -= win_cost #налог на победу 1 игрока
             manager.games[game_id]['players'][2]['budget'] += win_cost * 0.5  #субсидия проигравшему
+
+            manager.games[game_id]['players'][1]['win_score'] += income_p1 
+            manager.games[game_id]['players'][1]['win_score'] -= win_cost
         else:
             win_cost = cost_total_p2 * 10 / 100
+            manager.games[game_id]['players'][2]['budget'] += income_p2
             manager.games[game_id]['players'][2]['budget'] -= win_cost #налог на победу 2 игрока
             manager.games[game_id]['players'][1]['budget'] += win_cost * 0.5 #субсидия проигравшему
 
-        manager.games[game_id]['players'][1]['budget'] += 50 
-        manager.games[game_id]['players'][2]['budget'] += 50
+            manager.games[game_id]['players'][2]['win_score'] += income_p2
+            manager.games[game_id]['players'][2]['win_score'] -= win_cost 
+
+        manager.games[game_id]['players'][1]['budget'] += 30 
+        manager.games[game_id]['players'][2]['budget'] += 30
+         
 
         # Логирование полученных данных
         print(f"  Игрок 1: затраты={cost_total_p1}, новый бюджет={manager.games[game_id]['players'][1]['budget']}, (цена={p1['price']}, качество={p1['quality']}, реклама={p1['advertisement']})")
         print(f"  Игрок 2: затраты={cost_total_p2}, новый бюджет={manager.games[game_id]['players'][2]['budget']}, (цена={p2['price']}, качество={p2['quality']}, реклама={p2['advertisement']})")
 
-        # Обновление счетчика побед
-        manager.games[game_id]['players'][best_player]['win_score'] += 1
-
+        
         await manager.send_round_result(game_id, best_player)
 
         #проверка окончания игры при превышении числа раундов и определение победителя игры
@@ -209,4 +228,3 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, player_id: int)
             await manager.send_to_player(data, game_id, other_player) #пересылаем сообщение другому игроку
     except WebSocketDisconnect:
         manager.disconnect(game_id, player_id) #обрабатываем отключение игрока
-
